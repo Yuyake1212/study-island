@@ -114,10 +114,11 @@ $("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
 // ===== オンライン共有(Firebase) =====
 // Firebaseコンソールの「ウェブアプリ」設定の値をここに貼る
 // 設定値は config.js に書く(このファイルを更新しても貼り直し不要)
-const OKB=typeof FB_CONFIG!="undefined"&&!String(FB_CONFIG.apiKey).startsWith("PASTE");
+const CFG=typeof FB_CONFIG!="undefined"?FB_CONFIG:{apiKey:"AIzaSyAXDZsfQfVJlRXu-FfzjYW0bUbR-MaEnh4",authDomain:"study-island-e9b72.firebaseapp.com",projectId:"study-island-e9b72",appId:"1:1068587785676:web:2101978ddc0d1e12dd1169"};
+const OKB=!String(CFG.apiKey).startsWith("PASTE");
 let db=null,uid=null,mem={},unsub=null,lastHb=0,fbErr="",lastSoc="";
 async function fbInit(){if(!OKB||db||typeof firebase=="undefined")return !!db;
- try{firebase.initializeApp(FB_CONFIG);const f=firebase.firestore(),c=await firebase.auth().signInAnonymously();uid=c.user.uid;db=f;return true}catch(e){fbErr=e.message;return false}}
+ try{firebase.initializeApp(CFG);const f=firebase.firestore(),c=await firebase.auth().signInAnonymously();uid=c.user.uid;db=f;return true}catch(e){fbErr=e.message;return false}}
 const code=()=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let r="";for(let i=0;i<6;i++)r+=a[Math.floor(Math.random()*a.length)];return r};
 function toast(t){const o=document.createElement("div");o.className="toast";o.textContent=t;document.body.appendChild(o);setTimeout(()=>o.remove(),2600)}
 function listen(){if(unsub)unsub();unsub=null;if(!db||!S.gid)return;
