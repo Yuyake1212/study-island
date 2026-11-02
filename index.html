@@ -51,10 +51,17 @@ nav button.on{color:var(--sea);background:var(--bg);font-weight:700}
 .isl .l{background:linear-gradient(135deg,#ffd76a,#ff8fb1);box-shadow:0 0 12px #ffd76a}
 @media(prefers-reduced-motion:no-preference){.hero{animation:fl 3s ease-in-out infinite}.isl .l{animation:gl 1.6s ease-in-out infinite alternate}@keyframes fl{50%{transform:translateY(-8px)}}@keyframes gl{to{box-shadow:0 0 22px #ff8fb1}}}
 .ov input{width:100%;padding:12px;margin:6px 0;border-radius:12px;border:2px solid var(--ln);background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
+.wk div{cursor:pointer;border-radius:8px}.wk div.sel{color:var(--ink);font-weight:700}.wk div.sel b{outline:2px solid var(--sun)}
+.dt{background:var(--bg);border-radius:14px;padding:10px 12px;margin-top:10px;font-size:14px;line-height:1.7;min-height:48px}
+#pt{width:100%;padding:12px;border-radius:12px;border:2px solid var(--ln);background:var(--bg);color:var(--ink);font:inherit;font-size:16px;margin-bottom:8px;resize:vertical}
+#fx{position:fixed;inset:0;z-index:7;background:radial-gradient(circle at 50% 30%,#14485a,#071a22);color:#e9fbff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center}
+.fxs{font-size:18px;opacity:.85}.fxt{font-size:clamp(44px,15vw,72px);font-weight:700;font-variant-numeric:tabular-nums}
+.fxbar{width:min(320px,80%);height:8px;border-radius:4px;background:#ffffff26;overflow:hidden}.fxbar i{display:block;height:100%;background:var(--sun);width:0}
+#fx .sub,#fx .lnk{color:#9fcfda}.fxbt{display:flex;flex-direction:column;gap:6px;width:min(320px,80%)}
 </style></head><body><main>
 <div class="top"><h1>🏝️ 勉強アイランド</h1><div class="badge" id="st"></div></div>
 <div id="v"></div></main>
-<nav id="nav"><button data-t="h">ホーム</button><button data-t="i">島</button><button data-t="m">みんな</button><button data-t="r">記録</button></nav>
+<nav id="nav"><button data-t="h">ホーム</button><button data-t="i">島</button><button data-t="m">みんな</button><button data-t="b">掲示板</button><button data-t="r">記録</button></nav>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -79,7 +86,7 @@ function streak(){const ks=Object.keys(S.days).sort();if(!ks.length)return 0;let
 function weekSum(off){let t=0,d=new Date();d.setDate(d.getDate()-off);for(let i=0;i<7;i++){t+=(S.days[key(d)]||{sec:0}).sec;d.setDate(d.getDate()-1)}return t}
 const fmt=s=>{const h=Math.floor(s/3600);return(h?h+":":"")+pad(Math.floor(s%3600/60))+":"+pad(Math.floor(s%60))};
 function modal(h){const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card">'+h+'<button class="sm">OK</button></div>';o.onclick=e=>{if(e.target===o||e.target.className=="sm")o.remove()};document.body.appendChild(o);o.querySelector(".sm").focus()}
-function start(){S.run={t0:Date.now(),s:S.cur,acc:0,got:[],ch:0,lt:Date.now()};try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}save();lastHb=Date.now();sync();wlock();draw()}
+function start(){S.run={t0:Date.now(),s:S.cur,acc:0,got:[],ch:0,lt:Date.now(),fx:S.fxoff!==true};try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}save();lastHb=Date.now();sync();wlock();draw()}
 function commit(sec){const T0=Object.values(S.days).reduce((a,r)=>a+r.sec,0),k=key(),r=S.days[k]||(S.days[k]={sec:0,goal:S.goal,by:{}}),nm=S.subj[S.run.s]||"その他",w=r.sec>=r.goal*60;
  r.sec+=sec;r.by[nm]=(r.by[nm]||0)+sec;S.rem+=sec;const n=Math.floor(S.rem/600);S.rem-=n*600;
  for(let i=0;i<n;i++){const x=roll();S.items.push(x);S.run.got.push(x)}
@@ -93,26 +100,30 @@ function stop(){const sec=el();
  const m=Math.floor(run.acc/60),got=run.got;
  modal('<div class="big">'+(got.length?got.map(x=>esc(x)).join(" "):"🌊")+'</div><h2>'+m+'分 おつかれさま</h2><p class="sub">'+(got.length?"島に"+got.length+"個ふえたよ"+(got.some(x=>LEG.includes(x))?"(✨レジェンド!!✨)":got.some(x=>RARE.includes(x))?"(レアあり!)":""):"あと"+Math.ceil((600-S.rem)/60)+"分で島がそだつよ")+'</p>'+(run.up!==undefined?'<p>🎊 島が進化!<br>'+EM[run.up]+" "+TT[run.up]+'</p>':'')+(run.cl?'<p>🎉 今日の目標達成!</p>':''))}
 function tick(){if(S.run){const n=Date.now(),g=(n-(S.run.lt||n))/1000;S.run.lt=n;if(g>900&&!confirm("約"+Math.round(g/60)+"分、画面から離れていたようです。\nこの時間も勉強時間に数えますか?\n(OK=数える / キャンセル=数えない)"))S.run.t0+=g*1000}
- const e=el(),t=today().sec+e;if(S.run){const c=Math.floor((S.run.acc+e)/1800);if(c>(S.run.ch||0)){S.run.ch=c;chime();toast("🔔 "+c*30+"分たちました")}if(e>=300)flush()}const a=$("#tm");if(!a)return;a.textContent=fmt((S.run?S.run.acc:0)+e);
+ const e=el(),t=today().sec+e;if(S.run){const c=Math.floor((S.run.acc+e)/1800);if(c>(S.run.ch||0)){S.run.ch=c;chime();toast("🔔 "+c*30+"分たちました")}if(e>=300)flush()}fxUpd(e,t);const a=$("#tm");if(!a)return;a.textContent=fmt((S.run?S.run.acc:0)+e);
  $("#rg").style.strokeDashoffset=CIRC*(1-Math.min(1,t/(S.goal*60)));$("#td").textContent="今日 "+Math.floor(t/60)+"分 / 目標 "+S.goal+"分"}
 function home(){const run=!!S.run;
  return '<div class="card"><div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--ln)" stroke-width="9"/><circle id="rg" cx="60" cy="60" r="52" fill="none" stroke="var(--sun)" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+CIRC+'" stroke-dashoffset="'+CIRC+'"/></svg><div class="c"><div id="tm">00:00</div><div class="sub" id="td"></div></div></div>'
  +'<div class="chips">'+S.subj.map((s,i)=>'<button class="chip'+(i==S.cur?" on":"")+'" data-s="'+i+'"'+(run?" disabled":"")+'>'+esc(s)+'</button>').join("")+(run?"":'<button class="chip" data-add="1">＋</button>')+'</div>'
- +'<button class="go'+(run?" stop":"")+'" id="go">'+(run?"おわる":"はじめる")+'</button></div>'
+ +'<button class="go'+(run?" stop":"")+'" id="go">'+(run?"おわる":"はじめる")+'</button>'+(run?'<button class="lnk" data-fx="1">集中画面にする</button>':'')+'</div>'
  +'<div class="card sub">いま '+S.items.length+'個の島の仲間。1分未満は記録されません。</div>'}
 function isl(){const n=S.items.length,p=S.rem+el(),tot=(Object.values(S.days).reduce((a,r)=>a+r.sec,0)+el())/3600,v=lvOf(tot,LP),nx=LP[v+1],pc=nx?(tot-LP[v])/(nx-LP[v])*100:100;
  return '<div class="card"><div class="hero">'+EM[v]+'</div><h2 style="text-align:center;margin:4px 0">Lv.'+(v+1)+' '+TT[v]+'</h2><p class="sub" style="text-align:center">'+(nx?"次の進化「"+TT[v+1]+"」まで あと"+Math.max(0.1,Math.round((nx-tot)*10)/10)+"時間":"最終形態に到達!")+'</p><div class="bar"><i style="width:'+pc+'%"></i></div></div>'
  +'<div class="card"><h2 style="margin-top:0">仲間たち</h2>'+(n?'<div class="isl">'+S.items.slice(-60).map(x=>'<span class="'+(LEG.includes(x)?"l":RARE.includes(x)?"r":"")+'">'+esc(x)+'</span>').join("")+'</div>':'<p class="sub">まだ空っぽ。10分勉強するごとに、島に何かが生まれます。</p>')
  +'<p class="sub">仲間 '+n+'個 / 次の仲間まで あと'+Math.max(1,Math.ceil((600-p%600)/60))+'分</p><div class="bar"><i style="width:'+(p%600)/6+'%"></i></div></div>'}
 function rec(){const dn=["日","月","火","水","木","金","土"],cols=[];let d=new Date();d.setDate(d.getDate()-6);
- for(let i=0;i<7;i++){const k=key(d),r=S.days[k],g=r?r.goal*60:S.goal*60,h=r?Math.min(100,r.sec/g*100):0;cols.push('<div><b class="'+(ok(k)?"ok":"")+'" style="height:'+Math.max(4,h)+'px"></b>'+dn[d.getDay()]+'<br>'+(r?Math.floor(r.sec/60):0)+'分</div>');d.setDate(d.getDate()+1)}
+ for(let i=0;i<7;i++){const k=key(d),r=S.days[k],g=r?r.goal*60:S.goal*60,h=r?Math.min(100,r.sec/g*100):0;cols.push('<div data-k="'+k+'" tabindex="0"><b class="'+(ok(k)?"ok":"")+'" style="height:'+Math.max(4,h)+'px"></b>'+dn[d.getDay()]+'<br>'+(r?Math.floor(r.sec/60):0)+'分</div>');d.setDate(d.getDate()+1)}
  const a=weekSum(0),b=weekSum(7),df=Math.round((a-b)/60);
- return '<div class="card"><h2 style="margin-top:0">この1週間</h2><div class="wk">'+cols.join("")+'</div><p class="sub">棒の高さ=目標に対する達成度(青=達成)。今週 '+Math.floor(a/60)+'分'+(b?'(先週より '+(df>=0?"+":"")+df+'分)':"")+'。お休みは週2回まで連続記録に影響しません。</p></div>'
- +'<div class="card"><h2 style="margin-top:0">1日の目標</h2><div class="chips" style="justify-content:flex-start">'+[15,30,60,90,120].map(g=>'<button class="chip'+(g==S.goal?" on":"")+'" data-g="'+g+'">'+g+'分</button>').join("")+'<button class="chip'+(GL.includes(S.goal)?"":" on")+'" data-gc="1">'+(GL.includes(S.goal)?"自由入力":S.goal+"分")+'</button></div><button class="lnk" data-wl="1">画面を消さない(勉強中):'+(S.wl===false?"オフ":"オン")+'</button><button class="lnk" data-reset="1">データを消す</button></div>'+acc()}
+ return '<div class="card"><h2 style="margin-top:0">この1週間</h2><div class="wk">'+cols.join("")+'</div><div class="dt" id="dt"></div><p class="sub">棒をタップ(パソコンはカーソルを合わせる)すると、その日の詳しい内容が見られます。棒の高さ=目標に対する達成度(青=達成)。今週 '+Math.floor(a/60)+'分'+(b?'(先週より '+(df>=0?"+":"")+df+'分)':"")+'。お休みは週2回まで連続記録に影響しません。</p></div>'
+ +'<div class="card"><h2 style="margin-top:0">1日の目標</h2><div class="chips" style="justify-content:flex-start">'+[15,30,60,90,120].map(g=>'<button class="chip'+(g==S.goal?" on":"")+'" data-g="'+g+'">'+g+'分</button>').join("")+'<button class="chip'+(GL.includes(S.goal)?"":" on")+'" data-gc="1">'+(GL.includes(S.goal)?"自由入力":S.goal+"分")+'</button></div><button class="lnk" data-wl="1">画面を消さない(勉強中):'+(S.wl===false?"オフ":"オン")+'</button><button class="lnk" data-fs="1">集中画面(勉強中):'+(S.fxoff?"オフ":"オン")+'</button><button class="lnk" data-reset="1">データを消す</button></div>'+acc()}
 function draw(){const s=streak();$("#st").textContent="🔥 "+s+"日";
- $("#v").innerHTML=tab=="h"?home():tab=="i"?isl():tab=="m"?(lastSoc=soc()):rec();
+ $("#v").innerHTML=tab=="h"?home():tab=="i"?isl():tab=="m"?(lastSoc=soc()):tab=="b"?brd():rec();
  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t==tab));
- clearInterval(tk);if(S.run||tab=="h"||tab=="m"){tick();tk=setInterval(()=>{tick();if(tab=="i")draw();if(tab=="m")soctick()},1000)}}
+ tab=="b"?postsOn():postsOff();fxDraw();if(tab=="r"){const l=document.querySelector(".wk div:last-child");if(l){l.classList.add("sel");$("#dt").innerHTML=dayInfo(l.dataset.k)}}clearInterval(tk);if(S.run||tab=="h"||tab=="m"){tick();tk=setInterval(()=>{tick();if(tab=="i")draw();if(tab=="m")soctick()},1000)}}
+function dayInfo(k){const r=S.days[k],dn=["日","月","火","水","木","金","土"],d=new Date(k.replace(/-/g,"/")),f=x=>x>=60?Math.floor(x/60)+"時間"+(x%60?x%60+"分":""):x+"分",m=Math.floor((r?r.sec:0)/60),by=r?Object.entries(r.by||{}).sort((a,b)=>b[1]-a[1]).map(x=>esc(x[0])+" "+f(Math.floor(x[1]/60))):[];
+ return "<b>"+(d.getMonth()+1)+"/"+d.getDate()+"("+dn[d.getDay()]+")</b> 勉強 "+f(m)+(r?" / 目標 "+f(r.goal)+"(達成率 "+Math.round(r.sec/(r.goal*60)*100)+"%"+(ok(k)?" ✅":"")+")":"")+(by.length?"<br>科目別:"+by.join(" ・ "):"")}
+const showDay=e=>{const c=e.target.closest&&e.target.closest("[data-k]"),b=$("#dt");if(!c||!b)return;b.innerHTML=dayInfo(c.dataset.k);document.querySelectorAll(".wk div").forEach(x=>x.classList.toggle("sel",x===c))};
+["mouseover","click","focusin"].forEach(t=>$("#v").addEventListener(t,showDay));
 $("#nav").onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;draw()}};
 $("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
  if(e.target.id=="go")return S.run?stop():start();
@@ -125,6 +136,11 @@ $("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
  if(d.ch)cheer(d.ch,e.target);
  if(d.lv&&confirm("グループを抜けますか?"))leave();
  if(d.rm){S.rm=d.rm;save();draw()}
+ if(d.fs){S.fxoff=!S.fxoff;save();draw()}
+ if(d.fx==="1"&&S.run){S.run.fx=true;save();draw()}
+ if(d.pi){const t=$("#pt");t.value=reportText();draftP=t.value}
+ if(d.pp&&db){const t=$("#pt"),x=t.value.trim().slice(0,140);if(x){t.value="";draftP="";db.collection("groups/"+S.gid+"/posts").add({uid,nick:(S.nick||"?").slice(0,20),text:x,at:Date.now()}).catch(e=>{fbErr=e.message;toast("投稿できませんでした")})}}
+ if(d.dp&&db&&confirm("この投稿を消しますか?"))db.doc("groups/"+S.gid+"/posts/"+d.dp).delete().catch(()=>{});
  if(d.ac)authForm(1);if(d.li)authForm(0);if(d.lo&&confirm("ログアウトすると、この端末の記録は消えます(クラウドには保存済み)。よろしいですか?"))logout();
  if(d.gc){const v=parseInt(prompt("1日の目標を分で入力(1〜1440)"),10);if(v>=1&&v<=1440){S.goal=v;const r=S.days[key()];if(r)r.goal=v;save();cloudSave();sync();draw()}}
  if(d.wl){S.wl=(S.wl===false);save();if(S.wl===false)wrel();else wlock();draw()}
@@ -134,7 +150,7 @@ $("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
 // 設定値は config.js に書く(このファイルを更新しても貼り直し不要)
 const CFG=typeof FB_CONFIG!="undefined"?FB_CONFIG:{apiKey:"AIzaSyAXDZsfQfVJlRXu-FfzjYW0bUbR-MaEnh4",authDomain:"study-island-e9b72.firebaseapp.com",projectId:"study-island-e9b72",appId:"1:1068587785676:web:2101978ddc0d1e12dd1169"};
 const OKB=!String(CFG.apiKey).startsWith("PASTE");
-let db=null,uid=null,mem={},unsub=null,lastHb=0,fbErr="",lastSoc="",acct=null,fbp=null;
+let db=null,uid=null,mem={},unsub=null,lastHb=0,fbErr="",lastSoc="",acct=null,fbp=null,unsubP=null,posts=[],draftP="";
 function fbInit(){if(!OKB||typeof firebase=="undefined")return Promise.resolve(false);
  return fbp||(fbp=(async()=>{try{firebase.initializeApp(CFG);const f=firebase.firestore(),a=firebase.auth();
   let u=await new Promise(r=>{const x=a.onAuthStateChanged(y=>{x();r(y)})});if(!u)u=(await a.signInAnonymously()).user;
@@ -143,7 +159,7 @@ const code=()=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let r="";for(let i=0;
 function toast(t){const o=document.createElement("div");o.className="toast";o.textContent=t;document.body.appendChild(o);setTimeout(()=>o.remove(),2600)}
 function listen(){if(unsub)unsub();unsub=null;if(!db||!S.gid)return;
  unsub=db.collection("groups/"+S.gid+"/members").onSnapshot(q=>{mem={};q.forEach(d=>mem[d.id]=d.data());const me=mem[uid];
-  if(me){if(S.seen===undefined){S.seen=Date.now();save()}else if((me.lastAt||0)>S.seen){S.seen=me.lastAt;save();toast((me.lastFrom||"だれか")+"さんから応援が届いたよ👏")}}
+  if(me){if(S.seen===undefined){S.seen=Date.now();save()}else if((me.lastAt||0)>S.seen&&!(S.run&&S.run.fx)){S.seen=me.lastAt;save();toast((me.lastFrom||"だれか")+"さんから応援が届いたよ👏")}}
   if(tab=="m")draw()},e=>{fbErr=e.message;if(tab=="m")draw()})}
 function sync(x){if(!db||!S.gid||!uid)return;
  const t=today(),tot=Object.values(S.days).reduce((a,r)=>a+r.sec,0);
@@ -185,6 +201,21 @@ async function wlock(){try{if(S.wl!==false&&S.run&&"wakeLock" in navigator&&!wl)
 function wrel(){if(wl){wl.release().catch(()=>{});wl=null}}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState=="visible"){wlock();cloudPull()}});
 if(S.run)wlock();
+function tmf(t){const d=new Date(t);return(key(d)==key()?"":(d.getMonth()+1)+"/"+d.getDate()+" ")+pad(d.getHours())+":"+pad(d.getMinutes())}
+function reportText(){const r=S.days[key()],f=x=>x>=60?Math.floor(x/60)+"時間"+(x%60?x%60+"分":""):x+"分";if(!r||r.sec<60)return"今日はこれから勉強します!💪";
+ return"今日は"+f(Math.floor(r.sec/60))+"勉強したよ📚("+Object.entries(r.by||{}).sort((a,b)=>b[1]-a[1]).map(x=>x[0]+" "+f(Math.floor(x[1]/60))).join("・")+")"+(ok(key())?" 目標達成!🎉":"")}
+function postList(){if(!posts.length)return'<p class="sub">まだ投稿がありません。最初の報告をしてみよう!</p>';
+ return posts.map(p=>'<div class="mm" style="align-items:flex-start"><div style="flex:1"><b>'+esc(p.nick||"?")+'</b> <span class="sub">'+tmf(p.at)+'</span><div style="white-space:pre-wrap;word-break:break-word">'+esc(p.text)+'</div></div>'+(p.uid==uid?'<button class="lnk" data-dp="'+esc(p.id)+'">✕</button>':'')+'</div>').join("")}
+function brd(){if(!OKB||!S.gid)return'<div class="card"><h2 style="margin-top:0">掲示板</h2><p class="sub">「みんな」タブでグループに参加すると使えます。</p></div>';
+ return'<div class="card"><h2 style="margin-top:0">みんなの掲示板</h2><textarea id="pt" maxlength="140" rows="3" placeholder="今日やったことを報告しよう(140字まで)">'+esc(draftP)+'</textarea><div style="display:flex;gap:8px;align-items:center"><button class="chip" data-pi="1">今日の勉強を入れる</button><span style="flex:1"></span><button class="sm" style="margin:0" data-pp="1">投稿</button></div>'+err()+'</div><div class="card" id="pl">'+postList()+'</div>'}
+function postsOn(){if(unsubP||!db||!S.gid)return;unsubP=db.collection("groups/"+S.gid+"/posts").orderBy("at","desc").limit(30).onSnapshot(q=>{posts=q.docs.map(d=>Object.assign({id:d.id},d.data()));const l=$("#pl");if(tab=="b"&&l)l.innerHTML=postList()},e=>{fbErr=e.message})}
+function postsOff(){if(unsubP){unsubP();unsubP=null}}
+$("#v").addEventListener("input",e=>{if(e.target.id=="pt")draftP=e.target.value});
+function fxDraw(){let o=$("#fx");if(!(S.run&&S.run.fx)){if(o)o.remove();return}
+ if(!o){o=document.createElement("div");o.id="fx";o.innerHTML='<div class="fxs"></div><div id="fxt" class="fxt">00:00</div><div class="fxbar"><i id="fxb"></i></div><div id="fxd" class="sub"></div><div class="fxbt"><button class="go stop" data-fe="1">おわる</button><button class="lnk" data-fq="1">もどる</button></div>';
+  o.onclick=e=>{const d=e.target.dataset;if(d.fe)stop();if(d.fq){S.run.fx=false;save();draw()}};document.body.appendChild(o)}
+ o.querySelector(".fxs").textContent=(S.subj[S.run.s]||"")+" に集中中"}
+function fxUpd(e,t){const f=$("#fxt");if(!f||!S.run)return;f.textContent=fmt(S.run.acc+e);$("#fxd").textContent="今日 "+Math.floor(t/60)+"分 / 目標 "+S.goal+"分";$("#fxb").style.width=Math.min(100,t/(S.goal*60)*100)+"%"}
 const isAcct=()=>acct&&!acct.isAnonymous,EM2=id=>id+"@study-island.invalid";
 function cloudSave(){if(!db||!uid||!isAcct())return Promise.resolve();S.t=Date.now();const o=Object.assign({},S);delete o.run;save();return db.doc("users/"+uid).set({data:JSON.stringify(o),t:S.t}).catch(e=>{fbErr=e.message})}
 async function cloudPull(){if(!db||!uid||!isAcct()||S.run)return;try{const d=await db.doc("users/"+uid).get();if(!d.exists)return;const c=d.data();
