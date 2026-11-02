@@ -50,6 +50,7 @@ nav button.on{color:var(--sea);background:var(--bg);font-weight:700}
 .hero{font-size:84px;text-align:center;line-height:1.2}
 .isl .l{background:linear-gradient(135deg,#ffd76a,#ff8fb1);box-shadow:0 0 12px #ffd76a}
 @media(prefers-reduced-motion:no-preference){.hero{animation:fl 3s ease-in-out infinite}.isl .l{animation:gl 1.6s ease-in-out infinite alternate}@keyframes fl{50%{transform:translateY(-8px)}}@keyframes gl{to{box-shadow:0 0 22px #ff8fb1}}}
+.ov input{width:100%;padding:12px;margin:6px 0;border-radius:12px;border:2px solid var(--ln);background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
 </style></head><body><main>
 <div class="top"><h1>🏝️ 勉強アイランド</h1><div class="badge" id="st"></div></div>
 <div id="v"></div></main>
@@ -84,11 +85,11 @@ function commit(sec){const T0=Object.values(S.days).reduce((a,r)=>a+r.sec,0),k=k
  for(let i=0;i<n;i++){const x=roll();S.items.push(x);S.run.got.push(x)}
  const v=lvOf((T0+sec)/3600,LP);if(v>lvOf(T0/3600,LP)){S.run.up=v;S.run.upn=1}
  if(!w&&r.sec>=r.goal*60)S.run.cl=1;S.run.acc+=sec;S.run.t0=Date.now();return n}
-function flush(){const sec=el();if(sec<1)return;const c=!S.run.cl,n=commit(sec);save();lastHb=Date.now();sync();
+function flush(){const sec=el();if(sec<1)return;const c=!S.run.cl,n=commit(sec);save();cloudSave();lastHb=Date.now();sync();
  if(S.run.upn){S.run.upn=0;toast("🎊 島が進化! "+EM[S.run.up]+" "+TT[S.run.up])}else if(c&&S.run.cl)toast("🎉 今日の目標達成!");else if(n)toast("島に仲間が増えたよ🌱")}
 function stop(){const sec=el();
  if(S.run.acc+sec<60){S.run=null;wrel();save();sync();draw();return modal('<p>1分未満は記録されません。<br>もう少し続けてみよう。</p>')}
- if(sec>0)commit(sec);const run=S.run;S.run=null;wrel();save();sync();draw();
+ if(sec>0)commit(sec);const run=S.run;S.run=null;wrel();save();cloudSave();sync();draw();
  const m=Math.floor(run.acc/60),got=run.got;
  modal('<div class="big">'+(got.length?got.map(x=>esc(x)).join(" "):"🌊")+'</div><h2>'+m+'分 おつかれさま</h2><p class="sub">'+(got.length?"島に"+got.length+"個ふえたよ"+(got.some(x=>LEG.includes(x))?"(✨レジェンド!!✨)":got.some(x=>RARE.includes(x))?"(レアあり!)":""):"あと"+Math.ceil((600-S.rem)/60)+"分で島がそだつよ")+'</p>'+(run.up!==undefined?'<p>🎊 島が進化!<br>'+EM[run.up]+" "+TT[run.up]+'</p>':'')+(run.cl?'<p>🎉 今日の目標達成!</p>':''))}
 function tick(){if(S.run){const n=Date.now(),g=(n-(S.run.lt||n))/1000;S.run.lt=n;if(g>900&&!confirm("約"+Math.round(g/60)+"分、画面から離れていたようです。\nこの時間も勉強時間に数えますか?\n(OK=数える / キャンセル=数えない)"))S.run.t0+=g*1000}
@@ -107,7 +108,7 @@ function rec(){const dn=["日","月","火","水","木","金","土"],cols=[];let 
  for(let i=0;i<7;i++){const k=key(d),r=S.days[k],g=r?r.goal*60:S.goal*60,h=r?Math.min(100,r.sec/g*100):0;cols.push('<div><b class="'+(ok(k)?"ok":"")+'" style="height:'+Math.max(4,h)+'px"></b>'+dn[d.getDay()]+'<br>'+(r?Math.floor(r.sec/60):0)+'分</div>');d.setDate(d.getDate()+1)}
  const a=weekSum(0),b=weekSum(7),df=Math.round((a-b)/60);
  return '<div class="card"><h2 style="margin-top:0">この1週間</h2><div class="wk">'+cols.join("")+'</div><p class="sub">棒の高さ=目標に対する達成度(青=達成)。今週 '+Math.floor(a/60)+'分'+(b?'(先週より '+(df>=0?"+":"")+df+'分)':"")+'。お休みは週2回まで連続記録に影響しません。</p></div>'
- +'<div class="card"><h2 style="margin-top:0">1日の目標</h2><div class="chips" style="justify-content:flex-start">'+[15,30,60,90,120].map(g=>'<button class="chip'+(g==S.goal?" on":"")+'" data-g="'+g+'">'+g+'分</button>').join("")+'<button class="chip'+(GL.includes(S.goal)?"":" on")+'" data-gc="1">'+(GL.includes(S.goal)?"自由入力":S.goal+"分")+'</button></div><button class="lnk" data-wl="1">画面を消さない(勉強中):'+(S.wl===false?"オフ":"オン")+'</button><button class="lnk" data-reset="1">データを消す</button></div>'}
+ +'<div class="card"><h2 style="margin-top:0">1日の目標</h2><div class="chips" style="justify-content:flex-start">'+[15,30,60,90,120].map(g=>'<button class="chip'+(g==S.goal?" on":"")+'" data-g="'+g+'">'+g+'分</button>').join("")+'<button class="chip'+(GL.includes(S.goal)?"":" on")+'" data-gc="1">'+(GL.includes(S.goal)?"自由入力":S.goal+"分")+'</button></div><button class="lnk" data-wl="1">画面を消さない(勉強中):'+(S.wl===false?"オフ":"オン")+'</button><button class="lnk" data-reset="1">データを消す</button></div>'+acc()}
 function draw(){const s=streak();$("#st").textContent="🔥 "+s+"日";
  $("#v").innerHTML=tab=="h"?home():tab=="i"?isl():tab=="m"?(lastSoc=soc()):rec();
  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t==tab));
@@ -116,25 +117,28 @@ $("#nav").onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;draw()}};
 $("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
  if(e.target.id=="go")return S.run?stop():start();
  if(d.s!==undefined){S.cur=+d.s;save();draw()}
- if(d.add){const n=(prompt("科目の名前")||"").trim().slice(0,10);if(n){S.subj.push(n);S.cur=S.subj.length-1;save();draw()}}
- if(d.g){S.goal=+d.g;const r=S.days[key()];if(r)r.goal=S.goal;save();draw()}
+ if(d.add){const n=(prompt("科目の名前")||"").trim().slice(0,10);if(n){S.subj.push(n);S.cur=S.subj.length-1;save();cloudSave();draw()}}
+ if(d.g){S.goal=+d.g;const r=S.days[key()];if(r)r.goal=S.goal;save();cloudSave();draw()}
  if(d.reset&&confirm("記録も島も全部消えます。よろしいですか?")){localStorage.removeItem(KEY);location.reload()}
  if(d.mk)join(code(),1);
  if(d.jn){const c=(prompt("グループコード(6文字)")||"").trim().toUpperCase();if(c)join(c,0)}
  if(d.ch)cheer(d.ch,e.target);
  if(d.lv&&confirm("グループを抜けますか?"))leave();
  if(d.rm){S.rm=d.rm;save();draw()}
- if(d.gc){const v=parseInt(prompt("1日の目標を分で入力(1〜1440)"),10);if(v>=1&&v<=1440){S.goal=v;const r=S.days[key()];if(r)r.goal=v;save();sync();draw()}}
+ if(d.ac)authForm(1);if(d.li)authForm(0);if(d.lo&&confirm("ログアウトすると、この端末の記録は消えます(クラウドには保存済み)。よろしいですか?"))logout();
+ if(d.gc){const v=parseInt(prompt("1日の目標を分で入力(1〜1440)"),10);if(v>=1&&v<=1440){S.goal=v;const r=S.days[key()];if(r)r.goal=v;save();cloudSave();sync();draw()}}
  if(d.wl){S.wl=(S.wl===false);save();if(S.wl===false)wrel();else wlock();draw()}
- if(d.hd){S.hide=!S.hide;save();sync();draw()}};
+ if(d.hd){S.hide=!S.hide;save();cloudSave();sync();draw()}};
 // ===== オンライン共有(Firebase) =====
 // Firebaseコンソールの「ウェブアプリ」設定の値をここに貼る
 // 設定値は config.js に書く(このファイルを更新しても貼り直し不要)
 const CFG=typeof FB_CONFIG!="undefined"?FB_CONFIG:{apiKey:"AIzaSyAXDZsfQfVJlRXu-FfzjYW0bUbR-MaEnh4",authDomain:"study-island-e9b72.firebaseapp.com",projectId:"study-island-e9b72",appId:"1:1068587785676:web:2101978ddc0d1e12dd1169"};
 const OKB=!String(CFG.apiKey).startsWith("PASTE");
-let db=null,uid=null,mem={},unsub=null,lastHb=0,fbErr="",lastSoc="";
-async function fbInit(){if(!OKB||db||typeof firebase=="undefined")return !!db;
- try{firebase.initializeApp(CFG);const f=firebase.firestore(),c=await firebase.auth().signInAnonymously();uid=c.user.uid;db=f;return true}catch(e){fbErr=e.message;return false}}
+let db=null,uid=null,mem={},unsub=null,lastHb=0,fbErr="",lastSoc="",acct=null,fbp=null;
+function fbInit(){if(!OKB||typeof firebase=="undefined")return Promise.resolve(false);
+ return fbp||(fbp=(async()=>{try{firebase.initializeApp(CFG);const f=firebase.firestore(),a=firebase.auth();
+  let u=await new Promise(r=>{const x=a.onAuthStateChanged(y=>{x();r(y)})});if(!u)u=(await a.signInAnonymously()).user;
+  uid=u.uid;acct=u;db=f;return true}catch(e){fbErr=e.message;fbp=null;return false}})())}
 const code=()=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let r="";for(let i=0;i<6;i++)r+=a[Math.floor(Math.random()*a.length)];return r};
 function toast(t){const o=document.createElement("div");o.className="toast";o.textContent=t;document.body.appendChild(o);setTimeout(()=>o.remove(),2600)}
 function listen(){if(unsub)unsub();unsub=null;if(!db||!S.gid)return;
@@ -144,14 +148,14 @@ function listen(){if(unsub)unsub();unsub=null;if(!db||!S.gid)return;
 function sync(x){if(!db||!S.gid||!uid)return;
  const t=today(),tot=Object.values(S.days).reduce((a,r)=>a+r.sec,0);
  db.doc("groups/"+S.gid+"/members/"+uid).set(Object.assign({nick:S.nick,goal:S.goal,todayKey:key(),todaySec:Math.min(86400,Math.round(t.sec)),totalSec:Math.round(tot),studying:!!S.run,runStart:S.run?S.run.t0:null,hb:Date.now(),hide:!!S.hide,left:false},x||{}),{merge:true}).catch(e=>{fbErr=e.message})}
-function leave(){if(unsub)unsub();unsub=null;if(db&&S.gid&&uid)db.doc("groups/"+S.gid+"/members/"+uid).set({left:true,studying:false,runStart:null},{merge:true}).catch(()=>{});S.gid=null;mem={};save();draw()}
+function leave(){if(unsub)unsub();unsub=null;if(db&&S.gid&&uid)db.doc("groups/"+S.gid+"/members/"+uid).set({left:true,studying:false,runStart:null},{merge:true}).catch(()=>{});S.gid=null;mem={};save();cloudSave();draw()}
 function cheer(id,b){if(!db||!S.gid)return;const k=key();S.chd=S.chd||{};if(S.chd[id]==k)return;
  S.chd[id]=k;save();b.disabled=true;b.textContent="👏送った!";if(navigator.vibrate)navigator.vibrate(30);toast("応援を送りました👏");
  db.doc("groups/"+S.gid+"/members/"+id).update({cheers:firebase.firestore.FieldValue.increment(1),lastFrom:S.nick||"だれか",lastAt:Date.now()}).catch(x=>{delete S.chd[id];save();fbErr=x.message;draw();toast("送れませんでした")})}
 async function join(c,mk){if(!await fbInit()){return modal("<p>接続できませんでした。<br>"+esc(fbErr||"設定を確認してください")+"</p>")}
  if(!S.nick){const n=(prompt("ニックネーム")||"").trim().slice(0,12);if(!n)return;S.nick=n}
  try{const r=db.doc("groups/"+c);if(mk)await r.set({created:Date.now()});else if(!(await r.get()).exists)return modal("<p>そのコードのグループは見つかりません。</p>");
-  S.seen=Date.now();S.gid=c;save();listen();sync({joined:Date.now()});draw()}catch(e){fbErr=e.message;draw()}}
+  S.seen=Date.now();S.gid=c;save();cloudSave();listen();sync({joined:Date.now()});draw()}catch(e){fbErr=e.message;draw()}}
 const err=()=>fbErr?'<p class="sub">接続エラー: '+esc(fbErr)+'</p>':"";
 const live=m=>m.studying&&m.runStart&&Date.now()-m.hb<6e5;
 const la=m=>live(m)?Math.floor(Math.max(0,Date.now()-m.runStart)/60000)*60:0;
@@ -179,9 +183,33 @@ let wl=null,ac=null;
 function chime(){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume();[880,1320,1760].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+i*.28;o.frequency.value=f;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.3,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+1);o.start(t);o.stop(t+1.1)});if(navigator.vibrate)navigator.vibrate([80,60,80])}catch(e){}}
 async function wlock(){try{if(S.wl!==false&&S.run&&"wakeLock" in navigator&&!wl){wl=await navigator.wakeLock.request("screen");wl.addEventListener("release",()=>{wl=null})}}catch(e){wl=null}}
 function wrel(){if(wl){wl.release().catch(()=>{});wl=null}}
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState=="visible")wlock()});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState=="visible"){wlock();cloudPull()}});
 if(S.run)wlock();
-if(OKB&&S.gid)fbInit().then(o=>{if(o){listen();sync()}});
+const isAcct=()=>acct&&!acct.isAnonymous,EM2=id=>id+"@study-island.invalid";
+function cloudSave(){if(!db||!uid||!isAcct())return Promise.resolve();S.t=Date.now();const o=Object.assign({},S);delete o.run;save();return db.doc("users/"+uid).set({data:JSON.stringify(o),t:S.t}).catch(e=>{fbErr=e.message})}
+async function cloudPull(){if(!db||!uid||!isAcct()||S.run)return;try{const d=await db.doc("users/"+uid).get();if(!d.exists)return;const c=d.data();
+ if((c.t||0)>(S.t||0)){const o=JSON.parse(c.data);Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,o);save();if(S.gid)listen();draw()}}catch(e){}}
+const emsg=e=>/invalid-credential|wrong-password|user-not-found/.test(e.code)?"IDかパスワードが違います":e.code=="auth/email-already-in-use"?"そのIDはすでに使われています":e.code=="auth/operation-not-allowed"?"Firebaseで「メール/パスワード」ログインがオフです":e.code=="auth/too-many-requests"?"試行が多すぎます。しばらく待ってね":(e.message||"エラー");
+async function mkAcct(id,pw){if(!await fbInit())return"接続できません";
+ try{await firebase.auth().currentUser.linkWithCredential(firebase.auth.EmailAuthProvider.credential(EM2(id),pw));acct=firebase.auth().currentUser;await cloudSave();return""}catch(e){return emsg(e)}}
+async function login(id,pw){if(!await fbInit())return"接続できません";
+ if(S.run)return"勉強中はログインできません";
+ if(Object.keys(S.days).length&&!confirm("この端末の記録は、アカウントの記録に置き換わります。よろしいですか?"))return"やめました";
+ if(S.gid&&uid&&acct.isAnonymous)await db.doc("groups/"+S.gid+"/members/"+uid).set({left:true,studying:false,runStart:null},{merge:true}).catch(()=>{});
+ try{const c=await firebase.auth().signInWithEmailAndPassword(EM2(id),pw);uid=c.user.uid;acct=c.user;
+  const d=await db.doc("users/"+uid).get();if(d.exists){const o=JSON.parse(d.data().data);Object.keys(S).forEach(k=>delete S[k]);Object.assign(S,o)}save();await cloudSave();location.reload();return""}
+ catch(e){sync();return emsg(e)}}
+async function logout(){if(S.run)return alert("勉強中はログアウトできません");await cloudSave();await firebase.auth().signOut();localStorage.removeItem(KEY);location.reload()}
+function authForm(mk){const o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card"><h2 style="margin-top:0">'+(mk?"アカウントを作る":"ログイン")+'</h2><p class="sub">'+(mk?"IDとパスワードだけ。メールアドレスは不要です。パスワードは忘れると復元できないので、メモしてね。":"作ったIDとパスワードを入力してね。")+'</p><input class="aid" placeholder="ID(英数字3〜20文字)" autocapitalize="off" autocomplete="username"><input class="apw" type="password" placeholder="パスワード(6文字以上)" autocomplete="'+(mk?"new-password":"current-password")+'"><p class="sub aer" style="color:#d9534f"></p><button class="sm aok">OK</button> <button class="lnk acx">やめる</button></div>';
+ document.body.appendChild(o);const q=x=>o.querySelector(x);q(".acx").onclick=()=>o.remove();
+ q(".aok").onclick=async()=>{const id=q(".aid").value.trim().toLowerCase(),pw=q(".apw").value,er=q(".aer");
+  if(!/^[a-z0-9_.-]{3,20}$/.test(id))return er.textContent="IDは英数字と _ . - で3〜20文字";
+  if(pw.length<6)return er.textContent="パスワードは6文字以上";
+  er.textContent="処理中…";const r=await(mk?mkAcct(id,pw):login(id,pw));if(r)er.textContent=r;else{o.remove();draw()}}}
+function acc(){if(!OKB)return"";
+ return '<div class="card"><h2 style="margin-top:0">アカウント</h2>'+(isAcct()?'<p class="sub">ログイン中: <b>'+esc(acct.email.split("@")[0])+'</b><br>別の端末では「ログイン」から同じIDで使えます。</p><button class="lnk" data-lo="1">ログアウト</button>':'<p class="sub">アカウントを作ると、スマホとタブレットなど別の端末でも同じ記録で使えます。メールアドレスは不要で、IDとパスワードだけです。</p><button class="sm" data-ac="1">アカウントを作る</button> <button class="lnk" data-li="1">ログイン</button>')+'</div>'}
+if(OKB)fbInit().then(async o=>{if(o){await cloudPull();if(S.gid){listen();sync()}draw()}});
 
 draw();
 </script></body></html>
