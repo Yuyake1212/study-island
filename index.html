@@ -1,153 +1,163 @@
 <!DOCTYPE html>
-<html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>勉強アイランド</title>
-    <style>
-      :root{--bg:#e6f3f1;--card:#fff;--ink:#12333a;--sub:#5d7f84;--sea:#1a8fa3;--sun:#ffb547;--ln:#cfe5e2}
-      @media(prefers-color-scheme:dark){:root{--bg:#0c1f26;--card:#14303a;--ink:#e3f4f1;--sub:#8fb3b6;--sea:#3fc0d6;--sun:#ffc766;--ln:#1f4651}}
-      *{box-sizing:border-box}
-      body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Maru Gothic ProN","Zen Maru Gothic","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;padding:max(16px,env(safe-area-inset-top)) 16px 96px}
-      main{max-width:460px;margin:0 auto}
-      h1{font-size:18px;margin:0}
-      .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-      .badge{background:var(--card);border-radius:20px;padding:6px 12px;font-size:14px}
-      .card{background:var(--card);border-radius:22px;padding:18px;margin-bottom:14px}
-      .ring{position:relative;width:240px;height:240px;margin:4px auto 0}
-      .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
-      .ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-      #tm{font-size:54px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-1px}
-      .sub{color:var(--sub);font-size:13px}
-      .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
-      .chip{border:2px solid var(--ln);background:none;color:var(--ink);border-radius:20px;padding:8px 14px;font:inherit;font-size:14px}
-      .chip.on{border-color:var(--sea);background:var(--sea);color:#fff}
-      .chip:disabled{opacity:.45}
-      .go{display:block;width:100%;border:0;border-radius:18px;padding:18px;font:inherit;font-size:20px;font-weight:700;background:var(--sea);color:#fff}
-      .go.stop{background:var(--sun);color:#3a2a00}
-      button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
-      .isl{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;font-size:30px;text-align:center}
-      .isl span{background:var(--bg);border-radius:12px;padding:6px 0}
-      .isl .r{background:var(--sun)}
-      .bar{height:10px;border-radius:6px;background:var(--ln);overflow:hidden;margin-top:8px}
-      .bar i{display:block;height:100%;background:var(--sea)}
-      .wk{display:flex;gap:8px;align-items:flex-end;height:120px}
-      .wk div{flex:1;text-align:center;font-size:12px;color:var(--sub)}
-      .wk b{display:block;border-radius:8px 8px 0 0;background:var(--ln);margin:0 auto 4px;width:100%}
-      .wk b.ok{background:var(--sea)}
-      nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);padding:6px 8px max(6px,env(safe-area-inset-bottom));gap:4px}
-      nav button{flex:1;border:0;background:none;color:var(--sub);font:inherit;font-size:12px;padding:8px 0;border-radius:14px}
-      nav button.on{color:var(--sea);background:var(--bg);font-weight:700}
-      .ov{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;padding:24px;z-index:9}
-      .ov .card{max-width:340px;text-align:center;margin:0}
-      .ov .big{font-size:44px;line-height:1.3}
-      .sm{border:0;background:var(--sea);color:#fff;border-radius:14px;padding:12px 28px;font:inherit;font-size:16px;margin-top:12px}
-      .lnk{background:none;border:0;color:var(--sub);font:inherit;font-size:13px;text-decoration:underline;padding:8px}
-      @media(prefers-reduced-motion:no-preference){.ov .big{animation:pop .4s}@keyframes pop{from{transform:scale(.6);opacity:0}}}
-      .mm{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--ln)}.mm b{flex:1}
-    </style>
-  </head>
-  <body>
-    <main>
-      <div class="top">
-        <h1>🏝️ 勉強アイランド</h1>
-        <div class="badge" id="st"></div>
-      </div>
-      <div id="v"></div>
-    </main>
-    <nav id="nav">
-      <button data-t="h">ホーム</button>
-      <button data-t="i">島</button>
-      <button data-t="m">みんな</button>
-      <button data-t="r">記録</button>
-    </nav>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-    <script>
-      const KEY="studyisland.v1",$=s=>document.querySelector(s);
-      const POOL=["🌱","🌱","🌱","🌲","🌲","🌳","🌳","🌼","🌼","🍄","🌸","🏠","⛺","🦆","🦊","🐚","⛩️","🌈"],RARE=["🦊","⛩️","🌈"],CIRC=2*Math.PI*52;
-      let S={goal:30,subj:["英語","数学","国語","その他"],cur:0,days:{},items:[],rem:0,run:null},tab="h",tk=null;
-      try{Object.assign(S,JSON.parse(localStorage.getItem(KEY))||{})}catch(e){}
-      const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
-      const pad=n=>String(n).padStart(2,"0"),key=d=>{d=d||new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
-      const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-      const today=()=>S.days[key()]||{sec:0,goal:S.goal,by:{}};
-      const el=()=>S.run?(Date.now()-S.run.t0)/1000:0;
-      const ok=k=>{const r=S.days[k];return r&&r.sec>=r.goal*60};
-      function streak(){const ks=Object.keys(S.days).sort();if(!ks.length)return 0;let d=new Date(),n=ok(key(d))?1:0,fg={};
-       for(d.setDate(d.getDate()-1);key(d)>=ks[0];d.setDate(d.getDate()-1)){if(ok(key(d)))n++;else{const w=new Date(d);w.setDate(w.getDate()-(w.getDay()+6)%7);const k=key(w);fg[k]=(fg[k]||0)+1;if(fg[k]>2)break}}return n}
-      function weekSum(off){let t=0,d=new Date();d.setDate(d.getDate()-off);for(let i=0;i<7;i++){t+=(S.days[key(d)]||{sec:0}).sec;d.setDate(d.getDate()-1)}return t}
-      const fmt=s=>pad(Math.floor(s/60))+":"+pad(Math.floor(s%60));
-      function modal(h){const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card">'+h+'<button class="sm">OK</button></div>';o.onclick=e=>{if(e.target===o||e.target.className=="sm")o.remove()};document.body.appendChild(o);o.querySelector(".sm").focus()}
-      function start(){S.run={t0:Date.now(),s:S.cur};save();lastHb=Date.now();sync();draw()}
-      function stop(){const sec=Math.min(el(),7200),g=today(),was=g.sec>=S.goal*60;S.run=null;
-       if(sec<60){save();sync();draw();return modal('<p>1分未満は記録されません。<br>もう少し続けてみよう。</p>')}
-       const k=key(),r=S.days[k]||(S.days[k]={sec:0,goal:S.goal,by:{}}),nm=S.subj[S.cur]||"その他";
-       r.sec+=sec;r.by[nm]=(r.by[nm]||0)+sec;S.rem+=sec;const n=Math.floor(S.rem/600);S.rem-=n*600;
-       const got=[];for(let i=0;i<n;i++)got.push(POOL[Math.floor(Math.random()*POOL.length)]);S.items.push(...got);save();sync();draw();
-       const m=Math.floor(sec/60),cl=!was&&r.sec>=r.goal*60;
-       modal('<div class="big">'+(got.length?got.map(x=>esc(x)).join(" "):"🌊")+'</div><h2>'+m+'分 おつかれさま</h2><p class="sub">'+(got.length?"島に"+got.length+"個ふえたよ"+(got.some(x=>RARE.includes(x))?"(レアあり!)":""):"あと"+Math.ceil((600-S.rem)/60)+"分で島がそだつよ")+'</p>'+(cl?'<p>🎉 今日の目標達成!</p>':''))}
-      function tick(){const e=el(),t=today().sec+e;if(S.run&&Date.now()-lastHb>3e5){lastHb=Date.now();sync()}const a=$("#tm");if(!a)return;a.textContent=fmt(e);
-       $("#rg").style.strokeDashoffset=CIRC*(1-Math.min(1,t/(S.goal*60)));$("#td").textContent="今日 "+Math.floor(t/60)+"分 / 目標 "+S.goal+"分"}
-      function home(){const run=!!S.run;
-       return '<div class="card"><div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--ln)" stroke-width="9"/><circle id="rg" cx="60" cy="60" r="52" fill="none" stroke="var(--sun)" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+CIRC+'" stroke-dashoffset="'+CIRC+'"/></svg><div class="c"><div id="tm">00:00</div><div class="sub" id="td"></div></div></div>'
-       +'<div class="chips">'+S.subj.map((s,i)=>'<button class="chip'+(i==S.cur?" on":"")+'" data-s="'+i+'"'+(run?" disabled":"")+'>'+esc(s)+'</button>').join("")+(run?"":'<button class="chip" data-add="1">＋</button>')+'</div>'
-       +'<button class="go'+(run?" stop":"")+'" id="go">'+(run?"おわる":"はじめる")+'</button></div>'
-       +'<div class="card sub">いま '+S.items.length+'個の島の仲間。1分未満は記録されません。</div>'}
-      function isl(){const n=S.items.length,p=S.rem+el();
-       return '<div class="card"><h2 style="margin-top:0">わたしの島</h2>'+(n?'<div class="isl">'+S.items.slice(-48).map(x=>'<span'+(RARE.includes(x)?' class="r"':'')+'>'+esc(x)+'</span>').join("")+'</div>':'<p class="sub">まだ空っぽ。10分勉強するごとに、島に何かが生まれます。</p>')
-       +'<p class="sub">仲間 '+n+'個 / 次まで あと'+Math.max(1,Math.ceil((600-p%600)/60))+'分</p><div class="bar"><i style="width:'+(p%600)/6+'%"></i></div></div>'}
-      function rec(){const dn=["日","月","火","水","木","金","土"],cols=[];let d=new Date();d.setDate(d.getDate()-6);
-       for(let i=0;i<7;i++){const k=key(d),r=S.days[k],g=r?r.goal*60:S.goal*60,h=r?Math.min(100,r.sec/g*100):0;cols.push('<div><b class="'+(ok(k)?"ok":"")+'" style="height:'+Math.max(4,h)+'px"></b>'+dn[d.getDay()]+'<br>'+(r?Math.floor(r.sec/60):0)+'分</div>');d.setDate(d.getDate()+1)}
-       const a=weekSum(0),b=weekSum(7),df=Math.round((a-b)/60);
-       return '<div class="card"><h2 style="margin-top:0">この1週間</h2><div class="wk">'+cols.join("")+'</div><p class="sub">棒の高さ=目標に対する達成度(青=達成)。今週 '+Math.floor(a/60)+'分'+(b?'(先週より '+(df>=0?"+":"")+df+'分)':"")+'。お休みは週2回まで連続記録に影響しません。</p></div>'
-       +'<div class="card"><h2 style="margin-top:0">1日の目標</h2><div class="chips" style="justify-content:flex-start">'+[15,30,60,90,120].map(g=>'<button class="chip'+(g==S.goal?" on":"")+'" data-g="'+g+'">'+g+'分</button>').join("")+'</div><button class="lnk" data-reset="1">データを消す</button></div>'}
-      function draw(){const s=streak();$("#st").textContent="🔥 "+s+"日";
-       $("#v").innerHTML=tab=="h"?home():tab=="i"?isl():tab=="m"?soc():rec();
-       document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t==tab));
-       clearInterval(tk);if(S.run||tab=="h"){tick();tk=setInterval(()=>{tick();if(tab=="i")draw()},1000)}}
-      $("#nav").onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;draw()}};
-      $("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
-       if(e.target.id=="go")return S.run?stop():start();
-       if(d.s!==undefined){S.cur=+d.s;save();draw()}
-       if(d.add){const n=(prompt("科目の名前")||"").trim().slice(0,10);if(n){S.subj.push(n);S.cur=S.subj.length-1;save();draw()}}
-       if(d.g){S.goal=+d.g;const r=S.days[key()];if(r)r.goal=S.goal;save();draw()}
-       if(d.reset&&confirm("記録も島も全部消えます。よろしいですか?")){localStorage.removeItem(KEY);location.reload()}
-       if(d.mk)join(code(),1);
-       if(d.jn){const c=(prompt("グループコード(6文字)")||"").trim().toUpperCase();if(c)join(c,0)}
-       if(d.ch&&db)db.doc("groups/"+S.gid+"/members/"+d.ch).update({cheers:firebase.firestore.FieldValue.increment(1)}).then(()=>{e.target.textContent="👏✨"}).catch(x=>{fbErr=x.message;draw()});
-       if(d.lv&&confirm("グループを抜けますか?")){if(unsub)unsub();unsub=null;S.gid=null;mem={};save();draw()}};
-      // ===== オンライン共有(Firebase) =====
-      // Firebaseコンソールの「ウェブアプリ」設定の値をここに貼る
-      const FB_CONFIG={apiKey:"AIzaSyAXDZsfQfVJlRXu-FfzjYW0bUbR-MaEnh4",authDomain:"study-island-e9b72.firebaseapp.com",projectId:"study-island-e9b72",appId:"1:1068587785676:web:2101978ddc0d1e12dd1169"};
-      const OKB=!FB_CONFIG.apiKey.startsWith("PASTE");
-      let db=null,uid=null,mem={},unsub=null,lastHb=0,fbErr="";
-      async function fbInit(){if(!OKB||db||typeof firebase=="undefined")return !!db;
-       try{firebase.initializeApp(FB_CONFIG);const f=firebase.firestore(),c=await firebase.auth().signInAnonymously();uid=c.user.uid;db=f;return true}catch(e){fbErr=e.message;return false}}
-      const code=()=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let r="";for(let i=0;i<6;i++)r+=a[Math.floor(Math.random()*a.length)];return r};
-      function listen(){if(unsub)unsub();unsub=null;if(!db||!S.gid)return;
-       unsub=db.collection("groups/"+S.gid+"/members").onSnapshot(q=>{mem={};q.forEach(d=>mem[d.id]=d.data());if(tab=="m")draw()},e=>{fbErr=e.message;if(tab=="m")draw()})}
-      function sync(){if(!db||!S.gid||!uid)return;
-       const t=today(),tot=Object.values(S.days).reduce((a,r)=>a+r.sec,0);
-       db.doc("groups/"+S.gid+"/members/"+uid).set({nick:S.nick,goal:S.goal,todayKey:key(),todaySec:Math.min(86400,Math.round(t.sec)),totalSec:Math.round(tot),studying:!!S.run,hb:Date.now()},{merge:true}).catch(e=>{fbErr=e.message})}
-      async function join(c,mk){if(!await fbInit()){return modal("<p>接続できませんでした。<br>"+esc(fbErr||"設定を確認してください")+"</p>")}
-       if(!S.nick){const n=(prompt("ニックネーム")||"").trim().slice(0,12);if(!n)return;S.nick=n}
-       try{const r=db.doc("groups/"+c);if(mk)await r.set({created:Date.now()});else if(!(await r.get()).exists)return modal("<p>そのコードのグループは見つかりません。</p>");
-        S.gid=c;save();listen();sync();draw()}catch(e){fbErr=e.message;draw()}}
-      const err=()=>fbErr?'<p class="sub">接続エラー: '+esc(fbErr)+'</p>':"";
-      function soc(){
-       if(!OKB)return '<div class="card"><h2 style="margin-top:0">みんなで使う</h2><p class="sub">このファイルの FB_CONFIG にFirebaseの設定を貼ると、友達とつながれます。</p></div>';
-       if(!S.gid)return '<div class="card"><h2 style="margin-top:0">友達とつながる</h2><p class="sub">共有されるのは「勉強中か」と「今日の達成」だけ。時間や順位は見えません。</p><button class="go" data-mk="1">グループを作る</button><p></p><button class="go stop" data-jn="1">コードで参加する</button>'+err()+'</div>';
-       const ids=Object.keys(mem),h=ids.reduce((a,i)=>a+(mem[i].totalSec||0),0)/3600,L=[0,1,3,6,10,20,40],E=["🪸","🏝️","🌴","🏡","🏘️","🗼","🏰"];
-       let lv=0;L.forEach((x,i)=>{if(h>=x)lv=i});const nx=L[lv+1],pc=nx?(h-L[lv])/(nx-L[lv])*100:100;
-       return '<div class="card"><div style="font-size:56px;text-align:center">'+E[lv]+'</div><p class="sub" style="text-align:center">みんなの島 Lv.'+(lv+1)+(nx?" / 次まで あと"+Math.ceil((nx-h)*10)/10+"時間":" / 最大!")+'</p><div class="bar"><i style="width:'+pc+'%"></i></div></div>'
-       +'<div class="card">'+ids.map(i=>{const m=mem[i],td=m.todayKey==key(),live=m.studying&&Date.now()-m.hb<6e5,dn=td&&m.todaySec>=m.goal*60;
-        return '<div class="mm"><span style="font-size:24px">'+(live?"📖":dn?"✅":"🌙")+'</span><b>'+esc(m.nick||"?")+(i==uid?"(あなた)":"")+'</b><span class="sub">'+(live?"勉強中":dn?"今日達成":"これから")+'</span>'+(i==uid?'<span class="sub">応援 '+(m.cheers||0)+'</span>':'<button class="chip" data-ch="'+esc(i)+'">👏</button>')+'</div>'}).join("")
-       +'<p class="sub">グループコード: <b>'+esc(S.gid)+'</b>(友達に送ろう)</p><button class="lnk" data-lv="1">グループを抜ける</button>'+err()+'</div>'}
-      if(OKB&&S.gid)fbInit().then(o=>{if(o){listen();sync()}});
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>勉強アイランド</title>
+<style>
+:root{--bg:#e6f3f1;--card:#fff;--ink:#12333a;--sub:#5d7f84;--sea:#1a8fa3;--sun:#ffb547;--ln:#cfe5e2}
+@media(prefers-color-scheme:dark){:root{--bg:#0c1f26;--card:#14303a;--ink:#e3f4f1;--sub:#8fb3b6;--sea:#3fc0d6;--sun:#ffc766;--ln:#1f4651}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Maru Gothic ProN","Zen Maru Gothic","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;padding:max(16px,env(safe-area-inset-top)) 16px 96px}
+main{max-width:460px;margin:0 auto}
+h1{font-size:18px;margin:0}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.badge{background:var(--card);border-radius:20px;padding:6px 12px;font-size:14px}
+.card{background:var(--card);border-radius:22px;padding:18px;margin-bottom:14px}
+.ring{position:relative;width:240px;height:240px;margin:4px auto 0}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#tm{font-size:54px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.sub{color:var(--sub);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
+.chip{border:2px solid var(--ln);background:none;color:var(--ink);border-radius:20px;padding:8px 14px;font:inherit;font-size:14px}
+.chip.on{border-color:var(--sea);background:var(--sea);color:#fff}
+.chip:disabled{opacity:.45}
+.go{display:block;width:100%;border:0;border-radius:18px;padding:18px;font:inherit;font-size:20px;font-weight:700;background:var(--sea);color:#fff}
+.go.stop{background:var(--sun);color:#3a2a00}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.isl{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;font-size:30px;text-align:center}
+.isl span{background:var(--bg);border-radius:12px;padding:6px 0}
+.isl .r{background:var(--sun)}
+.bar{height:10px;border-radius:6px;background:var(--ln);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--sea)}
+.wk{display:flex;gap:8px;align-items:flex-end;height:120px}
+.wk div{flex:1;text-align:center;font-size:12px;color:var(--sub)}
+.wk b{display:block;border-radius:8px 8px 0 0;background:var(--ln);margin:0 auto 4px;width:100%}
+.wk b.ok{background:var(--sea)}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);padding:6px 8px max(6px,env(safe-area-inset-bottom));gap:4px}
+nav button{flex:1;border:0;background:none;color:var(--sub);font:inherit;font-size:12px;padding:8px 0;border-radius:14px}
+nav button.on{color:var(--sea);background:var(--bg);font-weight:700}
+.ov{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;padding:24px;z-index:9}
+.ov .card{max-width:340px;text-align:center;margin:0}
+.ov .big{font-size:44px;line-height:1.3}
+.sm{border:0;background:var(--sea);color:#fff;border-radius:14px;padding:12px 28px;font:inherit;font-size:16px;margin-top:12px}
+.lnk{background:none;border:0;color:var(--sub);font:inherit;font-size:13px;text-decoration:underline;padding:8px}
+@media(prefers-reduced-motion:no-preference){.ov .big{animation:pop .4s}@keyframes pop{from{transform:scale(.6);opacity:0}}}
+.mm{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--ln)}.mm b{flex:1}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:20px;font-size:14px;z-index:20}
+.rk{width:28px;text-align:center}.val{font-weight:700;min-width:48px;text-align:right}.dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+.mtr{display:flex;height:18px;border-radius:9px;overflow:hidden;background:var(--ln);margin:10px 0}.mtr i{display:block;height:100%}
+.lg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--sub)}.lg u{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;text-decoration:none}
+</style></head><body><main>
+<div class="top"><h1>🏝️ 勉強アイランド</h1><div class="badge" id="st"></div></div>
+<div id="v"></div></main>
+<nav id="nav"><button data-t="h">ホーム</button><button data-t="i">島</button><button data-t="m">みんな</button><button data-t="r">記録</button></nav>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="config.js"></script>
+<script>
+const KEY="studyisland.v1",$=s=>document.querySelector(s);
+const POOL=["🌱","🌱","🌱","🌲","🌲","🌳","🌳","🌼","🌼","🍄","🌸","🏠","⛺","🦆","🦊","🐚","⛩️","🌈"],RARE=["🦊","⛩️","🌈"],CIRC=2*Math.PI*52;
+let S={goal:30,subj:["英語","数学","国語","その他"],cur:0,days:{},items:[],rem:0,run:null},tab="h",tk=null;
+try{Object.assign(S,JSON.parse(localStorage.getItem(KEY))||{})}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const pad=n=>String(n).padStart(2,"0"),key=d=>{d=d||new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today=()=>S.days[key()]||{sec:0,goal:S.goal,by:{}};
+const el=()=>S.run?(Date.now()-S.run.t0)/1000:0;
+const ok=k=>{const r=S.days[k];return r&&r.sec>=r.goal*60};
+function streak(){const ks=Object.keys(S.days).sort();if(!ks.length)return 0;let d=new Date(),n=ok(key(d))?1:0,fg={};
+ for(d.setDate(d.getDate()-1);key(d)>=ks[0];d.setDate(d.getDate()-1)){if(ok(key(d)))n++;else{const w=new Date(d);w.setDate(w.getDate()-(w.getDay()+6)%7);const k=key(w);fg[k]=(fg[k]||0)+1;if(fg[k]>2)break}}return n}
+function weekSum(off){let t=0,d=new Date();d.setDate(d.getDate()-off);for(let i=0;i<7;i++){t+=(S.days[key(d)]||{sec:0}).sec;d.setDate(d.getDate()-1)}return t}
+const fmt=s=>pad(Math.floor(s/60))+":"+pad(Math.floor(s%60));
+function modal(h){const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card">'+h+'<button class="sm">OK</button></div>';o.onclick=e=>{if(e.target===o||e.target.className=="sm")o.remove()};document.body.appendChild(o);o.querySelector(".sm").focus()}
+function start(){S.run={t0:Date.now(),s:S.cur};save();lastHb=Date.now();sync();draw()}
+function stop(){const sec=Math.min(el(),7200),g=today(),was=g.sec>=S.goal*60;S.run=null;
+ if(sec<60){save();sync();draw();return modal('<p>1分未満は記録されません。<br>もう少し続けてみよう。</p>')}
+ const k=key(),r=S.days[k]||(S.days[k]={sec:0,goal:S.goal,by:{}}),nm=S.subj[S.cur]||"その他";
+ r.sec+=sec;r.by[nm]=(r.by[nm]||0)+sec;S.rem+=sec;const n=Math.floor(S.rem/600);S.rem-=n*600;
+ const got=[];for(let i=0;i<n;i++)got.push(POOL[Math.floor(Math.random()*POOL.length)]);S.items.push(...got);save();sync();draw();
+ const m=Math.floor(sec/60),cl=!was&&r.sec>=r.goal*60;
+ modal('<div class="big">'+(got.length?got.map(x=>esc(x)).join(" "):"🌊")+'</div><h2>'+m+'分 おつかれさま</h2><p class="sub">'+(got.length?"島に"+got.length+"個ふえたよ"+(got.some(x=>RARE.includes(x))?"(レアあり!)":""):"あと"+Math.ceil((600-S.rem)/60)+"分で島がそだつよ")+'</p>'+(cl?'<p>🎉 今日の目標達成!</p>':''))}
+function tick(){const e=el(),t=today().sec+e;if(S.run&&Date.now()-lastHb>3e5){lastHb=Date.now();sync()}const a=$("#tm");if(!a)return;a.textContent=fmt(e);
+ $("#rg").style.strokeDashoffset=CIRC*(1-Math.min(1,t/(S.goal*60)));$("#td").textContent="今日 "+Math.floor(t/60)+"分 / 目標 "+S.goal+"分"}
+function home(){const run=!!S.run;
+ return '<div class="card"><div class="ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--ln)" stroke-width="9"/><circle id="rg" cx="60" cy="60" r="52" fill="none" stroke="var(--sun)" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+CIRC+'" stroke-dashoffset="'+CIRC+'"/></svg><div class="c"><div id="tm">00:00</div><div class="sub" id="td"></div></div></div>'
+ +'<div class="chips">'+S.subj.map((s,i)=>'<button class="chip'+(i==S.cur?" on":"")+'" data-s="'+i+'"'+(run?" disabled":"")+'>'+esc(s)+'</button>').join("")+(run?"":'<button class="chip" data-add="1">＋</button>')+'</div>'
+ +'<button class="go'+(run?" stop":"")+'" id="go">'+(run?"おわる":"はじめる")+'</button></div>'
+ +'<div class="card sub">いま '+S.items.length+'個の島の仲間。1分未満は記録されません。</div>'}
+function isl(){const n=S.items.length,p=S.rem+el();
+ return '<div class="card"><h2 style="margin-top:0">わたしの島</h2>'+(n?'<div class="isl">'+S.items.slice(-48).map(x=>'<span'+(RARE.includes(x)?' class="r"':'')+'>'+esc(x)+'</span>').join("")+'</div>':'<p class="sub">まだ空っぽ。10分勉強するごとに、島に何かが生まれます。</p>')
+ +'<p class="sub">仲間 '+n+'個 / 次まで あと'+Math.max(1,Math.ceil((600-p%600)/60))+'分</p><div class="bar"><i style="width:'+(p%600)/6+'%"></i></div></div>'}
+function rec(){const dn=["日","月","火","水","木","金","土"],cols=[];let d=new Date();d.setDate(d.getDate()-6);
+ for(let i=0;i<7;i++){const k=key(d),r=S.days[k],g=r?r.goal*60:S.goal*60,h=r?Math.min(100,r.sec/g*100):0;cols.push('<div><b class="'+(ok(k)?"ok":"")+'" style="height:'+Math.max(4,h)+'px"></b>'+dn[d.getDay()]+'<br>'+(r?Math.floor(r.sec/60):0)+'分</div>');d.setDate(d.getDate()+1)}
+ const a=weekSum(0),b=weekSum(7),df=Math.round((a-b)/60);
+ return '<div class="card"><h2 style="margin-top:0">この1週間</h2><div class="wk">'+cols.join("")+'</div><p class="sub">棒の高さ=目標に対する達成度(青=達成)。今週 '+Math.floor(a/60)+'分'+(b?'(先週より '+(df>=0?"+":"")+df+'分)':"")+'。お休みは週2回まで連続記録に影響しません。</p></div>'
+ +'<div class="card"><h2 style="margin-top:0">1日の目標</h2><div class="chips" style="justify-content:flex-start">'+[15,30,60,90,120].map(g=>'<button class="chip'+(g==S.goal?" on":"")+'" data-g="'+g+'">'+g+'分</button>').join("")+'</div><button class="lnk" data-reset="1">データを消す</button></div>'}
+function draw(){const s=streak();$("#st").textContent="🔥 "+s+"日";
+ $("#v").innerHTML=tab=="h"?home():tab=="i"?isl():tab=="m"?(lastSoc=soc()):rec();
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t==tab));
+ clearInterval(tk);if(S.run||tab=="h"||tab=="m"){tick();tk=setInterval(()=>{tick();if(tab=="i")draw();if(tab=="m")soctick()},1000)}}
+$("#nav").onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;draw()}};
+$("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
+ if(e.target.id=="go")return S.run?stop():start();
+ if(d.s!==undefined){S.cur=+d.s;save();draw()}
+ if(d.add){const n=(prompt("科目の名前")||"").trim().slice(0,10);if(n){S.subj.push(n);S.cur=S.subj.length-1;save();draw()}}
+ if(d.g){S.goal=+d.g;const r=S.days[key()];if(r)r.goal=S.goal;save();draw()}
+ if(d.reset&&confirm("記録も島も全部消えます。よろしいですか?")){localStorage.removeItem(KEY);location.reload()}
+ if(d.mk)join(code(),1);
+ if(d.jn){const c=(prompt("グループコード(6文字)")||"").trim().toUpperCase();if(c)join(c,0)}
+ if(d.ch)cheer(d.ch,e.target);
+ if(d.lv&&confirm("グループを抜けますか?"))leave();
+ if(d.rm){S.rm=d.rm;save();draw()}
+ if(d.hd){S.hide=!S.hide;save();sync();draw()}};
+// ===== オンライン共有(Firebase) =====
+// Firebaseコンソールの「ウェブアプリ」設定の値をここに貼る
+// 設定値は config.js に書く(このファイルを更新しても貼り直し不要)
+const OKB=typeof FB_CONFIG!="undefined"&&!String(FB_CONFIG.apiKey).startsWith("PASTE");
+let db=null,uid=null,mem={},unsub=null,lastHb=0,fbErr="",lastSoc="";
+async function fbInit(){if(!OKB||db||typeof firebase=="undefined")return !!db;
+ try{firebase.initializeApp(FB_CONFIG);const f=firebase.firestore(),c=await firebase.auth().signInAnonymously();uid=c.user.uid;db=f;return true}catch(e){fbErr=e.message;return false}}
+const code=()=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let r="";for(let i=0;i<6;i++)r+=a[Math.floor(Math.random()*a.length)];return r};
+function toast(t){const o=document.createElement("div");o.className="toast";o.textContent=t;document.body.appendChild(o);setTimeout(()=>o.remove(),2600)}
+function listen(){if(unsub)unsub();unsub=null;if(!db||!S.gid)return;
+ unsub=db.collection("groups/"+S.gid+"/members").onSnapshot(q=>{mem={};q.forEach(d=>mem[d.id]=d.data());const me=mem[uid];
+  if(me){if(S.seen===undefined){S.seen=Date.now();save()}else if((me.lastAt||0)>S.seen){S.seen=me.lastAt;save();toast((me.lastFrom||"だれか")+"さんから応援が届いたよ👏")}}
+  if(tab=="m")draw()},e=>{fbErr=e.message;if(tab=="m")draw()})}
+function sync(x){if(!db||!S.gid||!uid)return;
+ const t=today(),tot=Object.values(S.days).reduce((a,r)=>a+r.sec,0);
+ db.doc("groups/"+S.gid+"/members/"+uid).set(Object.assign({nick:S.nick,goal:S.goal,todayKey:key(),todaySec:Math.min(86400,Math.round(t.sec)),totalSec:Math.round(tot),studying:!!S.run,runStart:S.run?S.run.t0:null,hb:Date.now(),hide:!!S.hide,left:false},x||{}),{merge:true}).catch(e=>{fbErr=e.message})}
+function leave(){if(unsub)unsub();unsub=null;if(db&&S.gid&&uid)db.doc("groups/"+S.gid+"/members/"+uid).set({left:true,studying:false,runStart:null},{merge:true}).catch(()=>{});S.gid=null;mem={};save();draw()}
+function cheer(id,b){if(!db||!S.gid)return;const k=key();S.chd=S.chd||{};if(S.chd[id]==k)return;
+ S.chd[id]=k;save();b.disabled=true;b.textContent="👏送った!";if(navigator.vibrate)navigator.vibrate(30);toast("応援を送りました👏");
+ db.doc("groups/"+S.gid+"/members/"+id).update({cheers:firebase.firestore.FieldValue.increment(1),lastFrom:S.nick||"だれか",lastAt:Date.now()}).catch(x=>{delete S.chd[id];save();fbErr=x.message;draw();toast("送れませんでした")})}
+async function join(c,mk){if(!await fbInit()){return modal("<p>接続できませんでした。<br>"+esc(fbErr||"設定を確認してください")+"</p>")}
+ if(!S.nick){const n=(prompt("ニックネーム")||"").trim().slice(0,12);if(!n)return;S.nick=n}
+ try{const r=db.doc("groups/"+c);if(mk)await r.set({created:Date.now()});else if(!(await r.get()).exists)return modal("<p>そのコードのグループは見つかりません。</p>");
+  S.seen=Date.now();S.gid=c;save();listen();sync({joined:Date.now()});draw()}catch(e){fbErr=e.message;draw()}}
+const err=()=>fbErr?'<p class="sub">接続エラー: '+esc(fbErr)+'</p>':"";
+const live=m=>m.studying&&m.runStart&&Date.now()-m.hb<6e5;
+const tds=m=>(m.todayKey==key()?m.todaySec||0:0)+(live(m)?Math.min(7200,(Date.now()-m.runStart)/1000):0);
+function soctick(){const h=soc();if(h!==lastSoc){lastSoc=h;$("#v").innerHTML=h}}
+function soc(){
+ if(!OKB)return '<div class="card"><h2 style="margin-top:0">みんなで使う</h2><p class="sub">config.js にFirebaseの設定を書くと、友達とつながれます。</p></div>';
+ if(!S.gid)return '<div class="card"><h2 style="margin-top:0">友達とつながる</h2><p class="sub">勉強中かどうか、今日の勉強時間、順位が共有されます。</p><button class="go" data-mk="1">グループを作る</button><p></p><button class="go stop" data-jn="1">コードで参加する</button>'+err()+'</div>';
+ const all=Object.keys(mem).sort((a,b)=>(mem[a].joined||0)-(mem[b].joined||0)||(a<b?-1:1)),col={};all.forEach((i,n)=>col[i]="hsl("+Math.round(n*137.5%360)+" 62% 52%)");
+ const vis=all.filter(i=>!mem[i].left),shown=vis.filter(i=>!mem[i].hide),secret=vis.filter(i=>mem[i].hide);
+ const sec=i=>mem[i].totalSec||0,T=all.reduce((a,i)=>a+sec(i),0),h=T/3600,L=[0,1,3,6,10,20,40],E=["🪸","🏝️","🌴","🏡","🏘️","🗼","🏰"];
+ let lv=0;L.forEach((x,i)=>{if(h>=x)lv=i});const nx=L[lv+1],pc=nx?(h-L[lv])/(nx-L[lv])*100:100;
+ const oth=all.filter(i=>mem[i].left||mem[i].hide).reduce((a,i)=>a+sec(i),0),seg=shown.map(i=>[mem[i].nick||"?",sec(i),col[i]]);if(oth)seg.push(["ほか",oth,"var(--ln)"]);
+ const P=S.rm=="p",score=i=>tds(mem[i])/(P?(mem[i].goal||30)*60:1),md=["🥇","🥈","🥉"];
+ const rk=shown.slice().sort((a,b)=>score(b)-score(a)||(mem[a].nick||"").localeCompare(mem[b].nick||""));
+ const cb=i=>i==uid?'<span class="sub">応援 '+(mem[i].cheers||0)+'</span>':(S.chd&&S.chd[i]==key()?'<button class="chip" disabled>済</button>':'<button class="chip" data-ch="'+esc(i)+'">👏</button>');
+ const row=(i,n,hid)=>{const m=mem[i],t=tds(m),dn=m.todayKey==key()&&(m.todaySec||0)>=m.goal*60;
+  return '<div class="mm"><span class="rk">'+(hid||t<=0?"":md[n]||n+1)+'</span><u class="dot" style="background:'+col[i]+'"></u><b>'+esc(m.nick||"?")+(i==uid?"(あなた)":"")+'</b><span class="sub">'+(live(m)?"📖勉強中":dn?"✅":"")+'</span><span class="val">'+(hid?"非公開":P?Math.round(t/((m.goal||30)*60)*100)+"%":Math.floor(t/60)+"分")+'</span>'+cb(i)+'</div>'};
+ return '<div class="card"><div style="font-size:56px;text-align:center">'+E[lv]+'</div><p class="sub" style="text-align:center">みんなの島 Lv.'+(lv+1)+(nx?" / 次まで あと"+Math.ceil((nx-h)*10)/10+"時間":" / 最大!")+'</p><div class="bar"><i style="width:'+pc+'%"></i></div>'
+ +'<div class="mtr">'+seg.map(x=>'<i style="width:'+(T?x[1]/T*100:0)+'%;background:'+x[2]+'"></i>').join("")+'</div><div class="lg">'+seg.map(x=>'<span><u style="background:'+x[2]+'"></u>'+esc(x[0])+" "+(T?Math.round(x[1]/T*100):0)+"%</span>").join("")+'</div></div>'
+ +'<div class="card"><div class="chips" style="margin-top:0"><button class="chip'+(P?"":" on")+'" data-rm="t">今日の時間</button><button class="chip'+(P?" on":"")+'" data-rm="p">目標達成率</button></div>'
+ +rk.map((i,n)=>row(i,n,0)).join("")+secret.map(i=>row(i,0,1)).join("")
+ +'<p class="sub">グループコード: <b>'+esc(S.gid)+'</b>(友達に送ろう)</p><button class="lnk" data-hd="1">自分の時間を'+(S.hide?"見せる(いま非公開)":"かくす(いま公開)")+'</button><button class="lnk" data-lv="1">グループを抜ける</button>'+err()+'</div>'}
+if(OKB&&S.gid)fbInit().then(o=>{if(o){listen();sync()}});
 
-      draw();
-    </script>
-  </body>
-</html>
+draw();
+</script></body></html>
