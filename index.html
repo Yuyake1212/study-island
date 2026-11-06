@@ -81,10 +81,19 @@ nav button{display:flex;flex-direction:column;align-items:center;gap:2px;font-si
 nav button b{font-size:20px;line-height:1.1;filter:grayscale(1);opacity:.65;transition:.2s}
 nav button.on{background:color-mix(in srgb,var(--sea) 12%,transparent);color:var(--sea)}nav button.on b{filter:none;opacity:1;transform:translateY(-2px)}
 .ov{-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}.isl span{border-radius:14px}
+.ring{width:min(240px,30vh);height:min(240px,30vh);width:min(240px,30dvh);height:min(240px,30dvh)}
+#tm{font-size:min(46px,6.2vh);font-size:min(46px,6.2dvh)}.hero{font-size:min(84px,11vh);font-size:min(84px,11dvh)}
+body.ns{height:100vh;height:100dvh;overflow:hidden;padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+body.ns main{height:100%;display:flex;flex-direction:column}
+body.ns #v{flex:1;min-height:0;display:flex;flex-direction:column}
+body.ns #v>.card{margin-bottom:10px;flex:none}body.ns #v>.card.fl{flex:1 1 0;min-height:0;overflow:hidden}
+@media(max-height:740px){body.ns .card{padding:14px}.go{padding:12px;font-size:17px}.chips{margin:8px 0}.ring{width:min(240px,25vh);height:min(240px,25vh);width:min(240px,25dvh);height:min(240px,25dvh)}.top{margin-bottom:8px}}
+nav button{position:relative}
+.bdg{position:absolute;top:0;left:calc(50% + 8px);min-width:18px;height:18px;border-radius:9px;background:#ff5a5f;color:#fff;font-size:11px;font-style:normal;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 6px #ff5a5f66}.bdg.on{display:flex}
 </style></head><body><main>
 <div class="top"><h1>🏝️ 勉強アイランド</h1><div class="badge" id="st"></div></div>
 <div id="v"></div></main>
-<nav id="nav"><button data-t="h"><b>🏠</b>ホーム</button><button data-t="i"><b>🏝️</b>島</button><button data-t="m"><b>👥</b>みんな</button><button data-t="b"><b>💬</b>掲示板</button><button data-t="r"><b>📊</b>記録</button></nav>
+<nav id="nav"><button data-t="h"><b>🏠</b>ホーム</button><button data-t="i"><b>🏝️</b>島</button><button data-t="m"><b>👥</b>みんな</button><button data-t="b"><b>💬</b>掲示板<em id="bg" class="bdg"></em></button><button data-t="r"><b>📊</b>記録</button></nav>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -129,11 +138,11 @@ function home(){const run=!!S.run;
  return examPill()+'<div class="card"><div class="ring"><svg viewBox="0 0 120 120"><defs><linearGradient id="rg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sun)"/><stop offset="1" style="stop-color:#ff8a5b"/></linearGradient></defs><circle cx="60" cy="60" r="52" fill="none" stroke="var(--ln)" stroke-width="9"/><circle id="rg" cx="60" cy="60" r="52" fill="none" stroke="url(#rg2)" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+CIRC+'" stroke-dashoffset="'+CIRC+'"/></svg><div class="c"><div id="tm">00:00</div><div class="sub" id="td"></div></div></div>'
  +'<div class="chips">'+S.subj.map((s,i)=>'<button class="chip'+(i==S.cur?" on":"")+'" data-s="'+i+'"'+(run?" disabled":"")+'>'+esc(s)+'</button>').join("")+(run?"":'<button class="chip" data-add="1">＋</button>')+'</div>'
  +(run?'<button class="go" data-ps="1">'+(S.run.paused?"▶ 再開":"⏸ 一時停止")+'</button><div style="height:10px"></div>':'')+'<button class="go'+(run?" stop":"")+'" id="go">'+(run?"おわる":"はじめる")+'</button>'+(run?'<button class="lnk" data-fx="1">集中画面にする</button>':'')+'</div>'
- +'<div class="card sub">いま '+S.items.length+'個の島の仲間。1分未満は記録されません。</div>'}
+ }
 function isl(){const n=S.items.length,p=S.rem+el(),tot=(Object.values(S.days).reduce((a,r)=>a+r.sec,0)+el())/3600,v=lvOf(tot,LP),nx=LP[v+1],pc=nx?(tot-LP[v])/(nx-LP[v])*100:100;
- return '<div class="card"><div class="hero">'+EM[v]+'</div><h2 style="text-align:center;margin:4px 0">Lv.'+(v+1)+' '+TT[v]+'</h2><p class="sub" style="text-align:center">'+(nx?"次の進化「"+TT[v+1]+"」まで あと"+Math.max(0.1,Math.round((nx-tot)*10)/10)+"時間":"最終形態に到達!")+'</p><div class="bar"><i style="width:'+pc+'%"></i></div></div>'
- +'<div class="card"><h2 style="margin-top:0">仲間たち</h2>'+(n?'<div class="isl">'+S.items.slice(-60).map(x=>'<span class="'+(LEG.includes(x)?"l":RARE.includes(x)?"r":"")+'">'+esc(x)+'</span>').join("")+'</div>':'<p class="sub">まだ空っぽ。10分勉強するごとに、島に何かが生まれます。</p>')
- +'<p class="sub">仲間 '+n+'個 / 次の仲間まで あと'+Math.max(1,Math.ceil((600-p%600)/60))+'分</p><div class="bar"><i style="width:'+(p%600)/6+'%"></i></div></div>'}
+ return '<div class="card"><div class="hero">'+EM[v]+'</div><h2 style="text-align:center;margin:4px 0">Lv.'+(v+1)+' '+TT[v]+'</h2><p class="sub" style="text-align:center;margin:0 0 6px">'+(nx?"次の進化「"+TT[v+1]+"」まで あと"+Math.max(0.1,Math.round((nx-tot)*10)/10)+"時間":"最終形態に到達!")+'</p><div class="bar"><i style="width:'+pc+'%"></i></div></div>'
+ +'<div class="card fl"><h2 style="margin:0 0 6px">仲間たち <span class="sub">'+n+'個</span></h2><p class="sub" style="margin:0 0 4px">次の仲間まで あと'+Math.max(1,Math.ceil((600-p%600)/60))+'分</p><div class="bar" style="margin:0 0 10px"><i style="width:'+(p%600)/6+'%"></i></div>'
+ +(n?'<div class="isl">'+S.items.slice(-60).reverse().map(x=>'<span class="'+(LEG.includes(x)?"l":RARE.includes(x)?"r":"")+'">'+esc(x)+'</span>').join("")+'</div>':'<p class="sub">まだ空っぽ。10分勉強するごとに、島に何かが生まれます。</p>')+'</div>'}
 function rec(){const dn=["日","月","火","水","木","金","土"],cols=[];let d=new Date();d.setDate(d.getDate()-6);
  for(let i=0;i<7;i++){const k=key(d),r=S.days[k],g=r?r.goal*60:S.goal*60,h=r?Math.min(100,r.sec/g*100):0;cols.push('<div data-k="'+k+'" tabindex="0"><b class="'+(ok(k)?"ok":"")+'" style="height:'+Math.max(4,h)+'px"></b>'+dn[d.getDay()]+'<br>'+(r?Math.floor(r.sec/60):0)+'分</div>');d.setDate(d.getDate()+1)}
  const a=weekSum(0),b=weekSum(7),df=Math.round((a-b)/60);
@@ -142,7 +151,7 @@ function rec(){const dn=["日","月","火","水","木","金","土"],cols=[];let 
 function draw(){const s=streak();$("#st").textContent="🔥 "+s+"日";
  $("#v").innerHTML=tab=="h"?home():tab=="i"?isl():tab=="m"?(lastSoc=soc()):tab=="b"?brd():rec();
  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t==tab));
- tab=="b"?postsOn():postsOff();fxDraw();if(tab=="r"){const l=document.querySelector(".wk div:last-child");if(l){l.classList.add("sel");$("#dt").innerHTML=dayInfo(l.dataset.k)}const t0=document.querySelector(".cal i.td");if(t0){t0.classList.add("sel");$("#dc").innerHTML=dayInfo(t0.dataset.ck)}}clearInterval(tk);if(S.run||tab=="h"||tab=="m"){tick();tk=setInterval(()=>{tick();if(tab=="i")draw();if(tab=="m")soctick()},1000)}}
+ document.body.classList.toggle("ns",tab=="h"||tab=="i");postsOn();if(tab=="b"){S.lastRead=Date.now();save()}updBadge();fxDraw();if(tab=="r"){const l=document.querySelector(".wk div:last-child");if(l){l.classList.add("sel");$("#dt").innerHTML=dayInfo(l.dataset.k)}const t0=document.querySelector(".cal i.td");if(t0){t0.classList.add("sel");$("#dc").innerHTML=dayInfo(t0.dataset.ck)}}clearInterval(tk);if(S.run||tab=="h"||tab=="m"){tick();tk=setInterval(()=>{tick();if(tab=="i")draw();if(tab=="m")soctick()},1000)}}
 let cm=0;
 function examPill(){const x=S.exam;if(!x||!x.date)return"";const d=Math.round((new Date(x.date.replace(/-/g,"/"))-new Date(new Date().toDateString()))/864e5);if(d<0)return"";
  return'<button class="pill" data-ex="1">📅 '+esc(x.name||"試験")+(d?" まで あと <b>"+d+"</b> 日":" は今日!がんばれ💪")+'</button>'}
@@ -207,15 +216,15 @@ function listen(){if(unsub)unsub();unsub=null;if(!db||!S.gid)return;
   if(tab=="m")draw()},e=>{fbErr=e.message;if(tab=="m")draw()})}
 function sync(x){if(!db||!S.gid||!uid)return;
  const t=today(),tot=Object.values(S.days).reduce((a,r)=>a+r.sec,0);
- return db.doc("groups/"+S.gid+"/members/"+uid).set(Object.assign({nick:S.nick,goal:S.goal,todayKey:key(),todaySec:Math.min(86400,Math.round(t.sec)),totalSec:Math.round(tot),studying:!!(S.run&&!S.run.paused),runStart:S.run&&!S.run.paused?S.run.t0:null,hb:Date.now(),hide:!!S.hide,left:false},x||{}),{merge:true}).catch(e=>{fbErr=e.message})}
-function leave(){if(unsub)unsub();unsub=null;if(db&&S.gid&&uid)db.doc("groups/"+S.gid+"/members/"+uid).set({left:true,studying:false,runStart:null},{merge:true}).catch(()=>{});S.gid=null;mem={};posts=[];save();cloudSave();draw()}
+ return db.doc("groups/"+S.gid+"/members/"+uid).set(Object.assign({nick:S.nick,goal:S.goal,todayKey:key(),todaySec:Math.min(86400,Math.round(t.sec)),totalSec:Math.round(tot),studying:!!(S.run&&!S.run.paused),runStart:S.run&&!S.run.paused?S.run.t0:null,hb:Date.now(),hide:!!S.hide,left:false,onl:document.visibilityState=="visible",pAt:Date.now()},x||{}),{merge:true}).catch(e=>{fbErr=e.message})}
+function leave(){if(unsub)unsub();unsub=null;if(db&&S.gid&&uid)db.doc("groups/"+S.gid+"/members/"+uid).set({left:true,studying:false,runStart:null},{merge:true}).catch(()=>{});S.gid=null;mem={};posts=[];postsOff();save();cloudSave();draw()}
 function cheer(id,b){if(!db||!S.gid)return;const k=key();S.chd=S.chd||{};if(S.chd[id]==k)return;
  S.chd[id]=k;save();b.disabled=true;b.textContent="👏送った!";if(navigator.vibrate)navigator.vibrate(30);toast("応援を送りました👏");
  db.doc("groups/"+S.gid+"/members/"+id).update({cheers:firebase.firestore.FieldValue.increment(1),lastFrom:S.nick||"だれか",lastAt:Date.now()}).catch(x=>{delete S.chd[id];save();fbErr=x.message;draw();toast("送れませんでした")})}
 async function join(c,mk){if(!await fbInit()){return modal("<p>接続できませんでした。<br>"+esc(fbErr||"設定を確認してください")+"</p>")}
  if(!S.nick){const n=(prompt("ニックネーム")||"").trim().slice(0,12);if(!n)return;S.nick=n}
  try{const r=db.doc("groups/"+c);if(mk)await r.set({created:Date.now()});else if(!(await r.get()).exists)return modal("<p>そのコードのグループは見つかりません。</p>");
-  S.seen=Date.now();S.gid=c;posts=[];save();cloudSave();await sync({joined:Date.now()});listen();draw()}catch(e){fbErr=e.message;draw()}}
+  S.seen=Date.now();S.gid=c;posts=[];postsOff();S.lastRead=Date.now();save();cloudSave();await sync({joined:Date.now()});listen();draw()}catch(e){fbErr=e.message;draw()}}
 const err=()=>fbErr?'<p class="sub">接続エラー: '+esc(fbErr)+'</p>':"";
 const live=m=>m.studying&&m.runStart&&Date.now()-m.hb<6e5;
 const la=m=>live(m)?Math.floor(Math.max(0,Date.now()-m.runStart)/60000)*60:0;
@@ -233,18 +242,22 @@ function soc(){
  const rk=shown.slice().sort((a,b)=>score(b)-score(a)||(mem[a].nick||"").localeCompare(mem[b].nick||""));
  const cb=i=>i==uid?'<span class="sub">応援 '+(mem[i].cheers||0)+'</span>':(S.chd&&S.chd[i]==key()?'<button class="chip" disabled>済</button>':'<button class="chip" data-ch="'+esc(i)+'">👏</button>');
  const row=(i,n,hid)=>{const m=mem[i],t=tds(m),dn=m.todayKey==key()&&(m.todaySec||0)>=m.goal*60;
-  return '<div class="mm"><span class="rk">'+(hid||t<=0?"":md[n]||n+1)+'</span><u class="dot" style="background:'+col[i]+'"></u><b>'+esc(m.nick||"?")+(i==uid?"(あなた)":"")+'</b><span class="sub">'+(live(m)?"📖勉強中":dn?"✅":"")+'</span><span class="val">'+(hid?"非公開":P?Math.round(t/((m.goal||30)*60)*100)+"%":Math.floor(t/60)+"分")+'</span>'+cb(i)+'</div>'};
+  return '<div class="mm"><span class="rk">'+(hid||t<=0?"":md[n]||n+1)+'</span><u class="dot" style="background:'+col[i]+'"></u><b>'+esc(m.nick||"?")+(i==uid?"(あなた)":"")+'</b><span class="sub">'+(live(m)?"📖勉強中":isOn(m)?"🟢使用中":dn?"✅":"")+'</span><span class="val">'+(hid?"非公開":P?Math.round(t/((m.goal||30)*60)*100)+"%":Math.floor(t/60)+"分")+'</span>'+cb(i)+'</div>'};
  return '<div class="card"><div style="font-size:56px;text-align:center">'+E[lv]+'</div><p class="sub" style="text-align:center">みんなの島 Lv.'+(lv+1)+" "+TT[lv]+(nx?" / 次まで あと"+Math.ceil((nx-h)*10)/10+"時間":" / 最大!")+'</p><div class="bar"><i style="width:'+pc+'%"></i></div>'
  +'<div class="mtr">'+seg.map(x=>'<i style="width:'+(T?x[1]/T*100:0)+'%;background:'+x[2]+'"></i>').join("")+'</div><div class="lg">'+seg.map(x=>'<span><u style="background:'+x[2]+'"></u>'+esc(x[0])+" "+(T?Math.round(x[1]/T*100):0)+"%</span>").join("")+'</div></div>'
  +'<div class="card"><div class="chips" style="margin-top:0"><button class="chip'+(P?"":" on")+'" data-rm="t">今日の時間</button><button class="chip'+(P?" on":"")+'" data-rm="p">目標達成率</button></div>'
- +rk.map((i,n)=>row(i,n,0)).join("")+secret.map(i=>row(i,0,1)).join("")
+ +'<p class="sub" style="margin:0 0 6px">🟢 いまアプリを開いている人: '+vis.filter(i=>isOn(mem[i])||live(mem[i])).length+'人(勉強中 '+vis.filter(i=>live(mem[i])).length+'人)</p>'+rk.map((i,n)=>row(i,n,0)).join("")+secret.map(i=>row(i,0,1)).join("")
  +'<p class="sub">グループコード: <b>'+esc(S.gid)+'</b>(友達に送ろう)</p><button class="lnk" data-hd="1">自分の時間を'+(S.hide?"見せる(いま非公開)":"かくす(いま公開)")+'</button><button class="lnk" data-lv="1">グループを抜ける</button>'+err()+'</div>'}
 let wl=null,ac=null;
 function chime(){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume();[880,1320,1760].forEach((f,i)=>{const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+i*.28;o.frequency.value=f;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.3,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+1);o.start(t);o.stop(t+1.1)});if(navigator.vibrate)navigator.vibrate([80,60,80])}catch(e){}}
 async function wlock(){try{if(S.wl!==false&&S.run&&"wakeLock" in navigator&&!wl){wl=await navigator.wakeLock.request("screen");wl.addEventListener("release",()=>{wl=null})}}catch(e){wl=null}}
 function wrel(){if(wl){wl.release().catch(()=>{});wl=null}}
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState=="visible"){wlock();cloudPull()}});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState=="visible"){wlock();cloudPull();ping(1)}else ping(0)});
 if(S.run)wlock();
+function ping(on){if(!db||!S.gid||!uid)return;db.doc("groups/"+S.gid+"/members/"+uid).set({onl:!!on,pAt:Date.now()},{merge:true}).catch(()=>{})}
+addEventListener("pagehide",()=>ping(0));setInterval(()=>{if(document.visibilityState=="visible")ping(1)},18e4);
+const isOn=m=>m.onl&&Date.now()-(m.pAt||0)<6e5;
+function updBadge(){const n=tab=="b"||!S.gid?0:posts.filter(x=>x.at>(S.lastRead||0)&&x.uid!=uid).length,e=$("#bg");if(e){e.textContent=n>29?"30+":n;e.classList.toggle("on",n>0)}}
 function pauseToggle(){if(!S.run)return;
  if(S.run.paused){S.run.t0=Date.now();S.run.lt=Date.now();S.run.paused=null;lastHb=Date.now();wlock()}
  else{const sec=el();if(sec>=1)commit(sec);S.run.paused=Date.now();wrel()}
@@ -256,7 +269,7 @@ function postList(){if(!posts.length)return'<p class="sub">まだ投稿があり
  return posts.map(p=>'<div class="mm" style="align-items:flex-start"><div style="flex:1"><b>'+esc(p.nick||"?")+'</b> <span class="sub">'+tmf(p.at)+'</span><div style="white-space:pre-wrap;word-break:break-word">'+esc(p.text)+'</div></div>'+(p.uid==uid?'<button class="lnk" data-dp="'+esc(p.id)+'">✕</button>':'')+'</div>').join("")}
 function brd(){if(!OKB||!S.gid)return'<div class="card"><h2 style="margin-top:0">掲示板</h2><p class="sub">「みんな」タブでグループに参加すると使えます。</p></div>';
  return'<div class="card"><h2 style="margin-top:0">みんなの掲示板 <span class="sub">グループ '+esc(S.gid)+'</span></h2><textarea id="pt" maxlength="140" rows="3" placeholder="今日やったことを報告しよう(140字まで)">'+esc(draftP)+'</textarea><div style="display:flex;gap:8px;align-items:center"><button class="chip" data-pi="1">今日の勉強を入れる</button><span style="flex:1"></span><button class="sm" style="margin:0" data-pp="1">投稿</button></div>'+err()+'</div><div class="card" id="pl">'+postList()+'</div>'}
-function postsOn(){if(unsubP||!db||!S.gid)return;unsubP=db.collection("groups/"+S.gid+"/posts").orderBy("at","desc").limit(30).onSnapshot(q=>{posts=q.docs.map(d=>Object.assign({id:d.id},d.data()));const l=$("#pl");if(tab=="b"&&l)l.innerHTML=postList()},e=>{fbErr=e.message})}
+function postsOn(){if(unsubP||!db||!S.gid)return;unsubP=db.collection("groups/"+S.gid+"/posts").orderBy("at","desc").limit(30).onSnapshot(q=>{posts=q.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.lastRead===undefined){S.lastRead=Date.now();save()}const l=$("#pl");if(tab=="b"){if(l)l.innerHTML=postList();S.lastRead=Date.now();save()}updBadge()},e=>{fbErr=e.message})}
 function postsOff(){if(unsubP){unsubP();unsubP=null}}
 $("#v").addEventListener("input",e=>{if(e.target.id=="pt")draftP=e.target.value});
 function fxDraw(){let o=$("#fx");if(!(S.run&&S.run.fx)){if(o)o.remove();return}
