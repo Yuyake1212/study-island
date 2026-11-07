@@ -93,8 +93,10 @@ nav button{position:relative}
 .qt{border-left:3px solid var(--sea);padding:4px 8px;margin:4px 0;font-size:12px;color:var(--sub);background:var(--bg);border-radius:0 8px 8px 0;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rq{display:flex;align-items:center;gap:6px;background:var(--bg);border-left:3px solid var(--sea);border-radius:0 10px 10px 0;padding:6px 8px;margin-bottom:8px;font-size:13px}.rq span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mm{transition:background .4s;border-radius:10px}.mm.hl{background:color-mix(in srgb,var(--sun) 28%,transparent)}
+.clk{font-variant-numeric:tabular-nums;font-weight:700;font-size:15px;color:var(--sub);letter-spacing:.04em}
+#fx .clk{position:absolute;top:max(16px,env(safe-area-inset-top));right:18px;color:#9fcfda}
 </style></head><body><main>
-<div class="top"><h1>🏝️ 勉強アイランド</h1><div class="badge" id="st"></div></div>
+<div class="top"><h1>🏝️ 勉強アイランド</h1><div style="display:flex;align-items:center;gap:10px"><span class="clk"></span><div class="badge" id="st"></div></div></div>
 <div id="v"></div></main>
 <nav id="nav"><button data-t="h"><b>🏠</b>ホーム</button><button data-t="i"><b>🏝️</b>島</button><button data-t="m"><b>👥</b>みんな</button><button data-t="b"><b>💬</b>掲示板<em id="bg" class="bdg"></em></button><button data-t="r"><b>📊</b>記録</button></nav>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -283,9 +285,9 @@ function postsOn(){if(unsubP||!db||!S.gid)return;unsubP=db.collection("groups/"+
 function postsOff(){if(unsubP){unsubP();unsubP=null}}
 $("#v").addEventListener("input",e=>{if(e.target.id=="pt")draftP=e.target.value});
 function fxDraw(){let o=$("#fx");if(!(S.run&&S.run.fx)){if(o)o.remove();return}
- if(!o){o=document.createElement("div");o.id="fx";o.innerHTML='<div class="fxs"></div><div id="fxt" class="fxt">00:00</div><div class="fxbar"><i id="fxb"></i></div><div id="fxd" class="sub"></div><div class="fxbt"><button class="go" data-fp="1">⏸ 一時停止</button><button class="go stop" data-fe="1">おわる</button><button class="lnk" data-fq="1">もどる</button></div>';
+ if(!o){o=document.createElement("div");o.id="fx";o.innerHTML='<div class="clk"></div><div class="fxs"></div><div id="fxt" class="fxt">00:00</div><div class="fxbar"><i id="fxb"></i></div><div id="fxd" class="sub"></div><div class="fxbt"><button class="go" data-fp="1">⏸ 一時停止</button><button class="go stop" data-fe="1">おわる</button><button class="lnk" data-fq="1">もどる</button></div>';
   o.onclick=e=>{const d=e.target.dataset;if(d.fe)stop();if(d.fp)pauseToggle();if(d.fq){S.run.fx=false;save();draw()}};document.body.appendChild(o)}
- o.querySelector(".fxs").textContent=(S.subj[S.run.s]||"")+(S.run.paused?"・一時停止中":" に集中中");o.querySelector("[data-fp]").textContent=S.run.paused?"▶ 再開":"⏸ 一時停止"}
+ o.querySelector(".fxs").textContent=(S.subj[S.run.s]||"")+(S.run.paused?"・一時停止中":" に集中中");o.querySelector("[data-fp]").textContent=S.run.paused?"▶ 再開":"⏸ 一時停止";clock()}
 function fxUpd(e,t){const f=$("#fxt");if(!f||!S.run)return;f.textContent=fmt(S.run.acc+e);$("#fxd").textContent="今日 "+Math.floor(t/60)+"分 / 目標 "+S.goal+"分";$("#fxb").style.width=Math.min(100,t/(S.goal*60)*100)+"%"}
 const isAcct=()=>acct&&!acct.isAnonymous,EM2=id=>id+"@study-island.invalid";
 function cloudSave(){if(!db||!uid||!isAcct())return Promise.resolve();S.t=Date.now();const o=Object.assign({},S);delete o.run;save();return db.doc("users/"+uid).set({data:JSON.stringify(o),t:S.t}).catch(e=>{fbErr=e.message})}
@@ -313,5 +315,7 @@ function acc(){if(!OKB)return"";
  return '<div class="card"><h2 style="margin-top:0">アカウント</h2>'+(isAcct()?'<p class="sub">ログイン中: <b>'+esc(acct.email.split("@")[0])+'</b><br>別の端末では「ログイン」から同じIDで使えます。</p><button class="lnk" data-lo="1">ログアウト</button>':'<p class="sub">アカウントを作ると、スマホとタブレットなど別の端末でも同じ記録で使えます。メールアドレスは不要で、IDとパスワードだけです。</p><button class="sm" data-ac="1">アカウントを作る</button> <button class="lnk" data-li="1">ログイン</button>')+'</div>'}
 if(OKB)fbInit().then(async o=>{if(o){await cloudPull();if(S.gid){await sync();listen()}draw()}});
 
+function clock(){const d=new Date(),t=pad(d.getHours())+":"+pad(d.getMinutes());document.querySelectorAll(".clk").forEach(e=>{if(e.textContent!=t)e.textContent=t})}
+clock();setInterval(clock,1000);
 draw();
 </script></body></html>
