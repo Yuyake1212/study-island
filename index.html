@@ -90,6 +90,9 @@ body.ns #v>.card{margin-bottom:10px;flex:none}body.ns #v>.card.fl{flex:1 1 0;min
 @media(max-height:740px){body.ns .card{padding:14px}.go{padding:12px;font-size:17px}.chips{margin:8px 0}.ring{width:min(240px,25vh);height:min(240px,25vh);width:min(240px,25dvh);height:min(240px,25dvh)}.top{margin-bottom:8px}}
 nav button{position:relative}
 .bdg{position:absolute;top:0;left:calc(50% + 8px);min-width:18px;height:18px;border-radius:9px;background:#ff5a5f;color:#fff;font-size:11px;font-style:normal;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 2px 6px #ff5a5f66}.bdg.on{display:flex}
+.qt{border-left:3px solid var(--sea);padding:4px 8px;margin:4px 0;font-size:12px;color:var(--sub);background:var(--bg);border-radius:0 8px 8px 0;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rq{display:flex;align-items:center;gap:6px;background:var(--bg);border-left:3px solid var(--sea);border-radius:0 10px 10px 0;padding:6px 8px;margin-bottom:8px;font-size:13px}.rq span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mm{transition:background .4s;border-radius:10px}.mm.hl{background:color-mix(in srgb,var(--sun) 28%,transparent)}
 </style></head><body><main>
 <div class="top"><h1>🏝️ 勉強アイランド</h1><div class="badge" id="st"></div></div>
 <div id="v"></div></main>
@@ -192,7 +195,10 @@ $("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
  if(d.ex)examForm();
  if(d.fx==="1"&&S.run){S.run.fx=true;save();draw()}
  if(d.pi){const t=$("#pt");t.value=reportText();draftP=t.value}
- if(d.pp&&db){const t=$("#pt"),x=t.value.trim().slice(0,140);if(x){t.value="";draftP="";db.collection("groups/"+S.gid+"/posts").add({uid,nick:(S.nick||"?").slice(0,20),text:x,at:Date.now()}).catch(e=>{fbErr=e.message;toast("投稿できませんでした")})}}
+ if(d.pp&&db){const t=$("#pt"),x=t.value.trim().slice(0,140);if(x){t.value="";draftP="";const rb=document.querySelector(".rq"),rr=replyTo;replyTo=null;if(rb)rb.remove();db.collection("groups/"+S.gid+"/posts").add(Object.assign({uid,nick:(S.nick||"?").slice(0,20),text:x,at:Date.now()},rr?{re:rr}:{})).catch(e=>{fbErr=e.message;toast("投稿できませんでした")})}}
+ if(d.rp){const q=posts.find(x=>x.id==d.rp);if(q){replyTo={id:q.id,uid:q.uid,nick:q.nick||"?",text:(q.text||"").slice(0,60)};draw();const t=$("#pt");if(t)t.focus()}}
+ if(d.rc){replyTo=null;draw()}
+ if(d.qj){const e=document.getElementById("p-"+d.qj);if(e){e.scrollIntoView({behavior:"smooth",block:"center"});e.classList.add("hl");setTimeout(()=>e.classList.remove("hl"),1600)}else toast("元の投稿は、表示できる範囲より古いようです")}
  if(d.dp&&db&&confirm("この投稿を消しますか?"))db.doc("groups/"+S.gid+"/posts/"+d.dp).delete().catch(()=>{});
  if(d.ac)authForm(1);if(d.li)authForm(0);if(d.lo&&confirm("ログアウトすると、この端末の記録は消えます(クラウドには保存済み)。よろしいですか?"))logout();
  if(d.gc){const v=parseInt(prompt("1日の目標を分で入力(1〜1440)"),10);if(v>=1&&v<=1440){S.goal=v;const r=S.days[key()];if(r)r.goal=v;save();cloudSave();sync();draw()}}
@@ -262,13 +268,17 @@ function pauseToggle(){if(!S.run)return;
  if(S.run.paused){S.run.t0=Date.now();S.run.lt=Date.now();S.run.paused=null;lastHb=Date.now();wlock()}
  else{const sec=el();if(sec>=1)commit(sec);S.run.paused=Date.now();wrel()}
  save();cloudSave();sync();draw()}
+let replyTo=null;
+const rqBar=()=>replyTo?'<div class="rq"><span>↩ '+esc(replyTo.nick)+': '+esc(replyTo.text)+'</span><button class="lnk" data-rc="1">✕</button></div>':"";
 function tmf(t){const d=new Date(t);return(key(d)==key()?"":(d.getMonth()+1)+"/"+d.getDate()+" ")+pad(d.getHours())+":"+pad(d.getMinutes())}
 function reportText(){const r=S.days[key()],f=x=>x>=60?Math.floor(x/60)+"時間"+(x%60?x%60+"分":""):x+"分";if(!r||r.sec<60)return"今日はこれから勉強します!💪";
  return"今日は"+f(Math.floor(r.sec/60))+"勉強したよ📚("+Object.entries(r.by||{}).sort((a,b)=>b[1]-a[1]).map(x=>x[0]+" "+f(Math.floor(x[1]/60))).join("・")+")"+(ok(key())?" 目標達成!🎉":"")}
 function postList(){if(!posts.length)return'<p class="sub">まだ投稿がありません。最初の報告をしてみよう!</p>';
- return posts.map(p=>'<div class="mm" style="align-items:flex-start"><div style="flex:1"><b>'+esc(p.nick||"?")+'</b> <span class="sub">'+tmf(p.at)+'</span><div style="white-space:pre-wrap;word-break:break-word">'+esc(p.text)+'</div></div>'+(p.uid==uid?'<button class="lnk" data-dp="'+esc(p.id)+'">✕</button>':'')+'</div>').join("")}
+ return posts.map(p=>'<div class="mm" id="p-'+esc(p.id)+'" style="align-items:flex-start"><div style="flex:1;min-width:0"><b>'+esc(p.nick||"?")+'</b> <span class="sub">'+tmf(p.at)+(p.re&&p.re.uid==uid?" ・あなたへの返信":"")+'</span>'
+  +(p.re?'<div class="qt" data-qj="'+esc(p.re.id)+'">↩ '+esc(p.re.nick||"?")+': '+esc(p.re.text||"")+'</div>':'')
+  +'<div style="white-space:pre-wrap;word-break:break-word">'+esc(p.text)+'</div></div><button class="lnk" data-rp="'+esc(p.id)+'">↩</button>'+(p.uid==uid?'<button class="lnk" data-dp="'+esc(p.id)+'">✕</button>':'')+'</div>').join("")}
 function brd(){if(!OKB||!S.gid)return'<div class="card"><h2 style="margin-top:0">掲示板</h2><p class="sub">「みんな」タブでグループに参加すると使えます。</p></div>';
- return'<div class="card"><h2 style="margin-top:0">みんなの掲示板 <span class="sub">グループ '+esc(S.gid)+'</span></h2><textarea id="pt" maxlength="140" rows="3" placeholder="今日やったことを報告しよう(140字まで)">'+esc(draftP)+'</textarea><div style="display:flex;gap:8px;align-items:center"><button class="chip" data-pi="1">今日の勉強を入れる</button><span style="flex:1"></span><button class="sm" style="margin:0" data-pp="1">投稿</button></div>'+err()+'</div><div class="card" id="pl">'+postList()+'</div>'}
+ return'<div class="card"><h2 style="margin-top:0">みんなの掲示板 <span class="sub">グループ '+esc(S.gid)+'</span></h2>'+rqBar()+'<textarea id="pt" maxlength="140" rows="3" placeholder="今日やったことを報告しよう(140字まで)">'+esc(draftP)+'</textarea><div style="display:flex;gap:8px;align-items:center"><button class="chip" data-pi="1">今日の勉強を入れる</button><span style="flex:1"></span><button class="sm" style="margin:0" data-pp="1">投稿</button></div>'+err()+'</div><div class="card" id="pl">'+postList()+'</div>'}
 function postsOn(){if(unsubP||!db||!S.gid)return;unsubP=db.collection("groups/"+S.gid+"/posts").orderBy("at","desc").limit(30).onSnapshot(q=>{posts=q.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.lastRead===undefined){S.lastRead=Date.now();save()}const l=$("#pl");if(tab=="b"){if(l)l.innerHTML=postList();S.lastRead=Date.now();save()}updBadge()},e=>{fbErr=e.message})}
 function postsOff(){if(unsubP){unsubP();unsubP=null}}
 $("#v").addEventListener("input",e=>{if(e.target.id=="pt")draftP=e.target.value});
