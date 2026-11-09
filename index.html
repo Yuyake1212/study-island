@@ -312,10 +312,10 @@ async function sendPost(){const t=$("#pt"),x=t.value.trim().slice(0,140);if(!x&&
   await ref.set(Object.assign({uid,nick:(S.nick||"?").slice(0,20),text:x,at:Date.now()},rr?{re:rr}:{},pd?{th:pd.th}:{}))}
  catch(e){fbErr=e.message;draftP=x;replyTo=rr;pend=pd;draw();toast("投稿できませんでした")}}
 async function viewImg(id){const o=document.createElement("div");o.className="ov";
- o.innerHTML='<div class="card iv" style="padding:10px"><div class="sub" id="ivl">読み込み中…</div><div class="ivw"><img id="ivi" style="display:none" alt=""></div><p class="sub" style="margin:6px 0 0">画像をタップで 拡大 / 縮小</p><div><button class="sm ivx">閉じる</button></div></div>';
+ o.innerHTML='<div class="card iv" style="padding:10px"><div class="sub" id="ivl">読み込み中…</div><div class="ivw"><img id="ivi" style="display:none" alt=""></div><p class="sub" style="margin:6px 0 0">画像をタップで 2倍に拡大 / 元に戻す</p><div><button class="sm ivx">閉じる</button></div></div>';
  document.body.appendChild(o);o.querySelector(".ivx").onclick=()=>o.remove();o.onclick=e=>{if(e.target===o)o.remove()};
  try{let d=imgC[id];if(!d){const r=await db.doc("groups/"+S.gid+"/images/"+id).get();if(!r.exists)throw 0;d=imgC[id]=r.data().d}
-  const i=o.querySelector("#ivi");i.src=d;i.style.display="block";i.onclick=()=>i.classList.toggle("full");o.querySelector("#ivl").remove()}
+  const i=o.querySelector("#ivi");i.src=d;i.style.display="block";i.onclick=()=>{const z=i.classList.toggle("full");i.style.width=z?i.naturalWidth*2+"px":""};o.querySelector("#ivl").remove()}
  catch(e){const l=o.querySelector("#ivl");if(l)l.textContent="画像を読み込めませんでした(消された可能性があります)"}}
 $("#v").addEventListener("change",e=>{if(e.target.id=="pf"){pickImg(e.target.files[0]);e.target.value=""}});
 const rqBar=()=>replyTo?'<div class="rq"><span>↩ '+esc(replyTo.nick)+': '+esc(replyTo.text)+'</span><button class="lnk" data-rc="1">✕</button></div>':"";
