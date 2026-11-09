@@ -102,6 +102,7 @@ nav button{position:relative}
 .isl .s{background:linear-gradient(135deg,#d4c4ff,#9fcbff)}
 .isl .m{background:linear-gradient(135deg,#ffe29a,#ff9bd2,#9bd8ff);box-shadow:0 0 16px #ff9bd2}
 #idt{display:none}#idt.on{display:block}
+.th{display:block;max-width:160px;max-height:160px;border-radius:12px;margin-top:6px;cursor:zoom-in}.pv{width:44px;height:44px;object-fit:cover;border-radius:8px}
 </style></head><body><main>
 <div class="top"><h1>🏝️ 勉強アイランド</h1><div style="display:flex;align-items:center;gap:10px"><span class="clk"></span><div class="badge" id="st"></div></div></div>
 <div id="v"></div></main>
@@ -221,11 +222,14 @@ $("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
  if(d.ex)examForm();
  if(d.fx==="1"&&S.run){S.run.fx=true;save();draw()}
  if(d.pi){const t=$("#pt");t.value=reportText();draftP=t.value}
- if(d.pp&&db){const t=$("#pt"),x=t.value.trim().slice(0,140);if(x){t.value="";draftP="";const rb=document.querySelector(".rq"),rr=replyTo;replyTo=null;if(rb)rb.remove();db.collection("groups/"+S.gid+"/posts").add(Object.assign({uid,nick:(S.nick||"?").slice(0,20),text:x,at:Date.now()},rr?{re:rr}:{})).catch(e=>{fbErr=e.message;toast("投稿できませんでした")})}}
+ if(d.pp&&db)sendPost();
+ if(d.pm){const f=$("#pf");if(f)f.click()}
+ if(d.px){pend=null;draw()}
+ if(d.im)viewImg(d.im);
  if(d.rp){const q=posts.find(x=>x.id==d.rp);if(q){replyTo={id:q.id,uid:q.uid,nick:q.nick||"?",text:(q.text||"").slice(0,60)};draw();const t=$("#pt");if(t)t.focus()}}
  if(d.rc){replyTo=null;draw()}
  if(d.qj){const e=document.getElementById("p-"+d.qj);if(e){e.scrollIntoView({behavior:"smooth",block:"center"});e.classList.add("hl");setTimeout(()=>e.classList.remove("hl"),1600)}else toast("元の投稿は、表示できる範囲より古いようです")}
- if(d.dp&&db&&confirm("この投稿を消しますか?"))db.doc("groups/"+S.gid+"/posts/"+d.dp).delete().catch(()=>{});
+ if(d.dp&&db&&confirm("この投稿を消しますか?")){const q=posts.find(x=>x.id==d.dp);if(q&&q.th)db.doc("groups/"+S.gid+"/images/"+d.dp).delete().catch(()=>{});db.doc("groups/"+S.gid+"/posts/"+d.dp).delete().catch(()=>{})}
  if(d.ac)authForm(1);if(d.li)authForm(0);if(d.lo&&confirm("ログアウトすると、この端末の記録は消えます(クラウドには保存済み)。よろしいですか?"))logout();
  if(d.gc){const v=parseInt(prompt("1日の目標を分で入力(1〜1440)"),10);if(v>=1&&v<=1440){S.goal=v;const r=S.days[key()];if(r)r.goal=v;save();cloudSave();sync();draw()}}
  if(d.wl){S.wl=(S.wl===false);save();if(S.wl===false)wrel();else wlock();draw()}
@@ -294,7 +298,24 @@ function pauseToggle(){if(!S.run)return;
  if(S.run.paused){S.run.t0=Date.now();S.run.lt=Date.now();S.run.paused=null;lastHb=Date.now();wlock()}
  else{const sec=el();if(sec>=1)commit(sec);S.run.paused=Date.now();wrel()}
  save();cloudSave();sync();draw()}
-let replyTo=null;
+let replyTo=null,pend=null;const imgC={};
+const thImg=p=>p.th&&/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(p.th)?'<img class="th" src="'+p.th+'" data-im="'+esc(p.id)+'" alt="添付画像">':"";
+function rsz(f,max,q){return new Promise((ok,ng)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas"),w=c.width=Math.round(im.width*k),h=c.height=Math.round(im.height*k),x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,w,h);x.drawImage(im,0,0,w,h);URL.revokeObjectURL(u);ok(c.toDataURL("image/jpeg",q))};im.onerror=ng;im.src=u})}
+async function pickImg(f){if(!f)return;toast("画像を処理中…");
+ try{let q=.7,full;for(;;){full=await rsz(f,900,q);if(full.length<=140000||q<=.3)break;q-=.1}
+  if(full.length>190000)return toast("画像が大きすぎます");pend={full,th:await rsz(f,220,.6)};draw()}catch(e){toast("画像を読み込めませんでした")}}
+async function sendPost(){const t=$("#pt"),x=t.value.trim().slice(0,140);if(!x&&!pend)return;const rr=replyTo,pd=pend;t.value="";draftP="";replyTo=null;pend=null;draw();
+ try{const ref=db.collection("groups/"+S.gid+"/posts").doc();
+  if(pd)await db.doc("groups/"+S.gid+"/images/"+ref.id).set({uid,d:pd.full,at:Date.now()});
+  await ref.set(Object.assign({uid,nick:(S.nick||"?").slice(0,20),text:x,at:Date.now()},rr?{re:rr}:{},pd?{th:pd.th}:{}))}
+ catch(e){fbErr=e.message;draftP=x;replyTo=rr;pend=pd;draw();toast("投稿できませんでした")}}
+async function viewImg(id){const o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card" style="padding:10px"><div class="sub" id="ivl">読み込み中…</div><img id="ivi" style="max-width:100%;max-height:70vh;border-radius:12px;display:none" alt=""><div><button class="sm ivx">閉じる</button></div></div>';
+ document.body.appendChild(o);o.querySelector(".ivx").onclick=()=>o.remove();o.onclick=e=>{if(e.target===o)o.remove()};
+ try{let d=imgC[id];if(!d){const r=await db.doc("groups/"+S.gid+"/images/"+id).get();if(!r.exists)throw 0;d=imgC[id]=r.data().d}
+  const i=o.querySelector("#ivi");i.src=d;i.style.display="block";o.querySelector("#ivl").remove()}
+ catch(e){const l=o.querySelector("#ivl");if(l)l.textContent="画像を読み込めませんでした(消された可能性があります)"}}
+$("#v").addEventListener("change",e=>{if(e.target.id=="pf"){pickImg(e.target.files[0]);e.target.value=""}});
 const rqBar=()=>replyTo?'<div class="rq"><span>↩ '+esc(replyTo.nick)+': '+esc(replyTo.text)+'</span><button class="lnk" data-rc="1">✕</button></div>':"";
 function tmf(t){const d=new Date(t);return(key(d)==key()?"":(d.getMonth()+1)+"/"+d.getDate()+" ")+pad(d.getHours())+":"+pad(d.getMinutes())}
 function reportText(){const r=S.days[key()],f=x=>x>=60?Math.floor(x/60)+"時間"+(x%60?x%60+"分":""):x+"分";if(!r||r.sec<60)return"今日はこれから勉強します!💪";
@@ -302,9 +323,9 @@ function reportText(){const r=S.days[key()],f=x=>x>=60?Math.floor(x/60)+"時間"
 function postList(){if(!posts.length)return'<p class="sub">まだ投稿がありません。最初の報告をしてみよう!</p>';
  return posts.map(p=>'<div class="mm" id="p-'+esc(p.id)+'" style="align-items:flex-start"><div style="flex:1;min-width:0"><b>'+esc(p.nick||"?")+'</b> <span class="sub">'+tmf(p.at)+(p.re&&p.re.uid==uid?" ・あなたへの返信":"")+'</span>'
   +(p.re?'<div class="qt" data-qj="'+esc(p.re.id)+'">↩ '+esc(p.re.nick||"?")+': '+esc(p.re.text||"")+'</div>':'')
-  +'<div style="white-space:pre-wrap;word-break:break-word">'+esc(p.text)+'</div></div><button class="lnk" data-rp="'+esc(p.id)+'">↩</button>'+(p.uid==uid?'<button class="lnk" data-dp="'+esc(p.id)+'">✕</button>':'')+'</div>').join("")}
+  +'<div style="white-space:pre-wrap;word-break:break-word">'+esc(p.text)+'</div>'+thImg(p)+'</div><button class="lnk" data-rp="'+esc(p.id)+'">↩</button>'+(p.uid==uid?'<button class="lnk" data-dp="'+esc(p.id)+'">✕</button>':'')+'</div>').join("")}
 function brd(){if(!OKB||!S.gid)return'<div class="card"><h2 style="margin-top:0">掲示板</h2><p class="sub">「みんな」タブでグループに参加すると使えます。</p></div>';
- return'<div class="card"><h2 style="margin-top:0">みんなの掲示板 <span class="sub">グループ '+esc(S.gid)+'</span></h2>'+rqBar()+'<textarea id="pt" maxlength="140" rows="3" placeholder="今日やったことを報告しよう(140字まで)">'+esc(draftP)+'</textarea><div style="display:flex;gap:8px;align-items:center"><button class="chip" data-pi="1">今日の勉強を入れる</button><span style="flex:1"></span><button class="sm" style="margin:0" data-pp="1">投稿</button></div>'+err()+'</div><div class="card" id="pl">'+postList()+'</div>'}
+ return'<div class="card"><h2 style="margin-top:0">みんなの掲示板 <span class="sub">グループ '+esc(S.gid)+'</span></h2>'+rqBar()+'<textarea id="pt" maxlength="140" rows="3" placeholder="今日やったことを報告しよう(140字まで)">'+esc(draftP)+'</textarea>'+(pend?'<div class="rq"><img class="pv" src="'+pend.th+'" alt=""><span>画像を添付中</span><button class="lnk" data-px="1">✕</button></div>':'')+'<div style="display:flex;gap:8px;align-items:center"><button class="chip" data-pi="1">今日の勉強を入れる</button><button class="chip" data-pm="1">🖼 画像</button><input type="file" id="pf" accept="image/*" hidden><span style="flex:1"></span><button class="sm" style="margin:0" data-pp="1">投稿</button></div>'+err()+'</div><div class="card" id="pl">'+postList()+'</div>'}
 function postsOn(){if(unsubP||!db||!S.gid)return;unsubP=db.collection("groups/"+S.gid+"/posts").orderBy("at","desc").limit(30).onSnapshot(q=>{posts=q.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.lastRead===undefined){S.lastRead=Date.now();save()}const l=$("#pl");if(tab=="b"){if(l)l.innerHTML=postList();S.lastRead=Date.now();save()}updBadge()},e=>{fbErr=e.message})}
 function postsOff(){if(unsubP){unsubP();unsubP=null}}
 $("#v").addEventListener("input",e=>{if(e.target.id=="pt")draftP=e.target.value});
