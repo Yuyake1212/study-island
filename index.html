@@ -105,6 +105,10 @@ nav button{position:relative}
 .th{display:block;max-width:160px;max-height:160px;border-radius:12px;margin-top:6px;cursor:zoom-in}.pv{width:44px;height:44px;object-fit:cover;border-radius:8px}
 .ov .card.iv{max-width:min(94vw,960px);width:fit-content}.ivw{overflow:auto;max-height:74vh;-webkit-overflow-scrolling:touch}
 .iv img{display:block;max-width:100%;max-height:70vh;margin:0 auto;border-radius:12px;cursor:zoom-in}.iv img.full{max-width:none;max-height:none;cursor:zoom-out}
+.seg{display:flex;gap:6px;justify-content:center;margin:0 0 6px}.seg button{border:0;background:var(--bg);color:var(--sub);border-radius:16px;padding:6px 12px;font:inherit;font-size:13px}.seg button.on{background:linear-gradient(135deg,#27b0c6,var(--sea));color:#fff}.seg button:disabled{opacity:.5}
+.ov label{display:block;margin:8px 0;text-align:left}
+.ring{width:min(240px,27vh);height:min(240px,27vh);width:min(240px,27dvh);height:min(240px,27dvh)}
+@media(max-height:740px){.ring{width:min(240px,22vh);height:min(240px,22vh);width:min(240px,22dvh);height:min(240px,22dvh)}}
 </style></head><body><main>
 <div class="top"><h1>🏝️ 勉強アイランド</h1><div style="display:flex;align-items:center;gap:10px"><span class="clk"></span><div class="badge" id="st"></div></div></div>
 <div id="v"></div></main>
@@ -127,14 +131,14 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const pad=n=>String(n).padStart(2,"0"),key=d=>{d=d||new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const today=()=>S.days[key()]||{sec:0,goal:S.goal,by:{}};
-const el=()=>S.run&&!S.run.paused?(Date.now()-S.run.t0)/1000:0;
+const el=()=>S.run&&!S.run.paused&&S.run.ph!=="b"?(Date.now()-S.run.t0)/1000:0;
 const ok=k=>{const r=S.days[k];return r&&r.sec>=r.goal*60};
 function streak(){const ks=Object.keys(S.days).sort();if(!ks.length)return 0;let d=new Date(),n=ok(key(d))?1:0,fg={};
  for(d.setDate(d.getDate()-1);key(d)>=ks[0];d.setDate(d.getDate()-1)){if(ok(key(d)))n++;else{const w=new Date(d);w.setDate(w.getDate()-(w.getDay()+6)%7);const k=key(w);fg[k]=(fg[k]||0)+1;if(fg[k]>2)break}}return n}
 function weekSum(off){let t=0,d=new Date();d.setDate(d.getDate()-off);for(let i=0;i<7;i++){t+=(S.days[key(d)]||{sec:0}).sec;d.setDate(d.getDate()-1)}return t}
 const fmt=s=>{const h=Math.floor(s/3600);return(h?h+":":"")+pad(Math.floor(s%3600/60))+":"+pad(Math.floor(s%60))};
 function modal(h){const o=document.createElement("div");o.className="ov";o.innerHTML='<div class="card">'+h+'<button class="sm">OK</button></div>';o.onclick=e=>{if(e.target===o||e.target.className=="sm")o.remove()};document.body.appendChild(o);o.querySelector(".sm").focus()}
-function start(){S.run={t0:Date.now(),s:S.cur,acc:0,got:[],ch:0,lt:Date.now(),fx:S.fxoff!==true};try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}save();lastHb=Date.now();sync();wlock();draw()}
+function start(){S.run={t0:Date.now(),s:S.cur,acc:0,got:[],ch:0,lt:Date.now(),fx:S.fxoff!==true,...(S.mode=="p"?{pm:1,ph:"w",pst:Date.now(),plen:P().w*60,n:0}:{})};try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}save();lastHb=Date.now();sync();wlock();draw()}
 function commit(sec){const T0=Object.values(S.days).reduce((a,r)=>a+r.sec,0),k=key(),r=S.days[k]||(S.days[k]={sec:0,goal:S.goal,by:{}}),nm=S.subj[S.run.s]||"その他",w=r.sec>=r.goal*60;
  r.sec+=sec;r.by[nm]=(r.by[nm]||0)+sec;S.rem+=sec;const n=Math.floor(S.rem/600);S.rem-=n*600;
  for(let i=0;i<n;i++){const x=roll();S.items.push(x);S.run.got.push(x)}
@@ -147,11 +151,23 @@ function stop(){const sec=el();
  if(sec>0)commit(sec);const run=S.run;S.run=null;wrel();save();cloudSave();sync();draw();
  const m=Math.floor(run.acc/60),got=run.got;
  modal('<div class="big">'+(got.length?got.map(x=>esc(x)).join(" "):"🌊")+'</div><h2>'+m+'分 おつかれさま</h2><p class="sub">'+(got.length?"島に"+got.length+"個ふえたよ"+(got.some(x=>MY.includes(x))?"(🌠神話級!!!🌠)":got.some(x=>LEG.includes(x))?"(✨レジェンド!!✨)":got.some(x=>SR.includes(x))?"(スーパーレア!)":got.some(x=>RARE.includes(x))?"(レアあり!)":""):"あと"+Math.ceil((600-S.rem)/60)+"分で島がそだつよ")+'</p>'+(run.up!==undefined?'<p>🎊 島が進化!<br>'+EM[run.up]+" "+TT[run.up]+'</p>':'')+(run.cl?'<p>🎉 今日の目標達成!</p>':''))}
-function tick(){if(S.run&&!S.run.paused){const n=Date.now(),g=(n-(S.run.lt||n))/1000;S.run.lt=n;if(g>900&&!confirm("約"+Math.round(g/60)+"分、画面から離れていたようです。\nこの時間も勉強時間に数えますか?\n(OK=数える / キャンセル=数えない)"))S.run.t0+=g*1000}
- const e=el(),t=today().sec+e;if(S.run&&!S.run.paused){const c=Math.floor((S.run.acc+e)/1800);if(c>(S.run.ch||0)){S.run.ch=c;chime();toast("🔔 "+c*30+"分たちました")}if(e>=300)flush()}fxUpd(e,t);const a=$("#tm");if(!a)return;a.textContent=fmt((S.run?S.run.acc:0)+e);
- $("#rg").style.strokeDashoffset=CIRC*(1-Math.min(1,t/(S.goal*60)));$("#td").textContent="今日 "+Math.floor(t/60)+"分 / 目標 "+S.goal+"分"}
+function dispT(e,t){const r=S.run,td=Math.floor(t/60)+"分";
+ if(r&&r.pm){const L=r.plen,x=(r.paused?r.paused-r.pst:Date.now()-r.pst)/1000,rem=Math.max(0,Math.ceil(L-x)),q=P(),b=r.ph=="b";
+  return{tm:pad(Math.floor(rem/60))+":"+pad(rem%60),pr:Math.min(1,x/L),brk:b,lab:(b?(r.lg?"長い休憩":"休憩"):"作業 "+((r.n%q.lc)+1)+"/"+q.lc)+" ・ 今日 "+td}}
+ if(!r&&S.mode=="p")return{tm:pad(P().w)+":00",pr:0,brk:false,lab:"ポモドーロ ・ 今日 "+td};
+ return{tm:fmt((r?r.acc:0)+e),pr:Math.min(1,t/(S.goal*60)),brk:false,lab:"今日 "+td+" / 目標 "+S.goal+"分"}}
+function pomoStep(){const r=S.run;if(!r||!r.pm||r.paused)return;let g=0,ch=0;
+ while(g++<60){const end=r.pst+r.plen*1000;if(Date.now()<end)break;const q=P();
+  if(r.ph=="w"){const sec=Math.max(0,(end-r.t0)/1000);if(sec>=1)commit(sec);r.n=(r.n||0)+1;r.lg=r.n%q.lc==0;r.ph="b";r.plen=(r.lg?q.lb:q.sb)*60;r.pst=end;ch=1}
+  else{r.ph="w";r.plen=q.w*60;r.pst=end;r.t0=end;ch=2}}
+ if(ch){r.lt=Date.now();if(ch==1)r.t0=Date.now();save();cloudSave();sync();draw();chime();toast(r.ph=="b"?(r.lg?"長い休憩":"休憩")+" "+Math.round(r.plen/60)+"分☕":"作業スタート💪 "+Math.round(r.plen/60)+"分");
+  if(r.upn){r.upn=0;toast("🎊 島が進化! "+EM[r.up]+" "+TT[r.up])}}}
+function tick(){if(S.run&&!S.run.paused){const n=Date.now(),g=(n-(S.run.lt||n))/1000;S.run.lt=n;if(g>900&&(!S.run.pm||S.run.ph!="b")&&!confirm("約"+Math.round(g/60)+"分、画面から離れていたようです。\nこの時間も勉強時間に数えますか?\n(OK=数える / キャンセル=数えない)")){S.run.t0+=g*1000;if(S.run.pm)S.run.pst+=g*1000}}
+ pomoStep();let e=el(),t=today().sec+e;
+ if(S.run&&!S.run.paused){const c=Math.floor((S.run.acc+e)/1800);if(!S.run.pm&&c>(S.run.ch||0)){S.run.ch=c;chime();toast("🔔 "+c*30+"分たちました")}if(e>=300){flush();e=el();t=today().sec+e}}
+ const d=dispT(e,t);fxUpd(d);const a=$("#tm");if(!a)return;a.textContent=d.tm;const rg=$("#rg");rg.style.strokeDashoffset=CIRC*(1-d.pr);rg.style.stroke=d.brk?"var(--sea)":"url(#rg2)";$("#td").textContent=d.lab}
 function home(){const run=!!S.run;
- return examPill()+'<div class="card"><div class="ring"><svg viewBox="0 0 120 120"><defs><linearGradient id="rg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sun)"/><stop offset="1" style="stop-color:#ff8a5b"/></linearGradient></defs><circle cx="60" cy="60" r="52" fill="none" stroke="var(--ln)" stroke-width="9"/><circle id="rg" cx="60" cy="60" r="52" fill="none" stroke="url(#rg2)" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+CIRC+'" stroke-dashoffset="'+CIRC+'"/></svg><div class="c"><div id="tm">00:00</div><div class="sub" id="td"></div></div></div>'
+ return examPill()+'<div class="card">'+seg(run)+'<div class="ring"><svg viewBox="0 0 120 120"><defs><linearGradient id="rg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sun)"/><stop offset="1" style="stop-color:#ff8a5b"/></linearGradient></defs><circle cx="60" cy="60" r="52" fill="none" stroke="var(--ln)" stroke-width="9"/><circle id="rg" cx="60" cy="60" r="52" fill="none" stroke="url(#rg2)" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+CIRC+'" stroke-dashoffset="'+CIRC+'"/></svg><div class="c"><div id="tm">00:00</div><div class="sub" id="td"></div></div></div>'
  +'<div class="chips">'+S.subj.map((s,i)=>'<button class="chip'+(i==S.cur?" on":"")+'" data-s="'+i+'"'+(run?" disabled":"")+'>'+esc(s)+'</button>').join("")+(run?"":'<button class="chip" data-add="1">＋</button>')+'</div>'
  +(run?'<button class="go" data-ps="1">'+(S.run.paused?"▶ 再開":"⏸ 一時停止")+'</button><div style="height:10px"></div>':'')+'<button class="go'+(run?" stop":"")+'" id="go">'+(run?"おわる":"はじめる")+'</button>'+(run?'<button class="lnk" data-fx="1">集中画面にする</button>':'')+'</div>'
  }
@@ -220,6 +236,8 @@ $("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
  if(d.rm){S.rm=d.rm;save();draw()}
  if(d.fs){S.fxoff=!S.fxoff;save();draw()}
  if(d.ps)pauseToggle();
+ if(d.md){S.mode=d.md;save();cloudSave();draw()}
+ if(d.pg)pomoForm();
  if(d.cm){cm=Math.min(0,cm+ +d.cm);draw()}
  if(d.ex)examForm();
  if(d.fx==="1"&&S.run){S.run.fx=true;save();draw()}
@@ -254,7 +272,7 @@ function listen(){if(unsub)unsub();unsub=null;if(!db||!S.gid)return;
   if(tab=="m")draw()},e=>{fbErr=e.message;if(tab=="m")draw()})}
 function sync(x){if(!db||!S.gid||!uid)return;
  const t=today(),tot=Object.values(S.days).reduce((a,r)=>a+r.sec,0);
- return db.doc("groups/"+S.gid+"/members/"+uid).set(Object.assign({nick:S.nick,goal:S.goal,todayKey:key(),todaySec:Math.min(86400,Math.round(t.sec)),totalSec:Math.round(tot),studying:!!(S.run&&!S.run.paused),runStart:S.run&&!S.run.paused?S.run.t0:null,hb:Date.now(),hide:!!S.hide,left:false,onl:document.visibilityState=="visible",pAt:Date.now()},x||{}),{merge:true}).catch(e=>{fbErr=e.message})}
+ return db.doc("groups/"+S.gid+"/members/"+uid).set(Object.assign({nick:S.nick,goal:S.goal,todayKey:key(),todaySec:Math.min(86400,Math.round(t.sec)),totalSec:Math.round(tot),studying:!!(S.run&&!S.run.paused&&S.run.ph!=="b"),runStart:S.run&&!S.run.paused&&S.run.ph!=="b"?S.run.t0:null,hb:Date.now(),hide:!!S.hide,left:false,onl:document.visibilityState=="visible",pAt:Date.now()},x||{}),{merge:true}).catch(e=>{fbErr=e.message})}
 function leave(){if(unsub)unsub();unsub=null;if(db&&S.gid&&uid)db.doc("groups/"+S.gid+"/members/"+uid).set({left:true,studying:false,runStart:null},{merge:true}).catch(()=>{});S.gid=null;mem={};posts=[];postsOff();save();cloudSave();draw()}
 function cheer(id,b){if(!db||!S.gid)return;const k=key();S.chd=S.chd||{};if(S.chd[id]==k)return;
  S.chd[id]=k;save();b.disabled=true;b.textContent="👏送った!";if(navigator.vibrate)navigator.vibrate(30);toast("応援を送りました👏");
@@ -296,8 +314,16 @@ function ping(on){if(!db||!S.gid||!uid)return;db.doc("groups/"+S.gid+"/members/"
 addEventListener("pagehide",()=>ping(0));setInterval(()=>{if(document.visibilityState=="visible")ping(1)},18e4);
 const isOn=m=>m.onl&&Date.now()-(m.pAt||0)<6e5;
 function updBadge(){const n=tab=="b"||!S.gid?0:posts.filter(x=>x.at>(S.lastRead||0)&&x.uid!=uid).length,e=$("#bg");if(e){e.textContent=n>29?"30+":n;e.classList.toggle("on",n>0)}}
+const P=()=>Object.assign({w:25,sb:5,lb:15,lc:4},S.pomo||{});
+const seg=run=>'<div class="seg"><button class="'+(S.mode!="p"?"on":"")+'" data-md="s"'+(run?" disabled":"")+'>ストップウォッチ</button><button class="'+(S.mode=="p"?"on":"")+'" data-md="p"'+(run?" disabled":"")+'>ポモドーロ</button>'+(S.mode=="p"&&!run?'<button data-pg="1">⚙</button>':'')+'</div>';
+function pomoForm(){const q=P(),o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card"><h2 style="margin-top:0">ポモドーロの設定</h2><div class="chips" style="margin:4px 0"><button class="chip" data-v="25,5,15,4">25分/5分</button><button class="chip" data-v="50,10,20,3">50分/10分</button><button class="chip" data-v="90,15,30,2">90分/15分</button></div><label class="sub">作業(分)<input class="pw" type="number" min="1" max="180" value="'+q.w+'"></label><label class="sub">休憩(分)<input class="ps" type="number" min="1" max="60" value="'+q.sb+'"></label><label class="sub">長い休憩(分)<input class="pl" type="number" min="1" max="120" value="'+q.lb+'"></label><label class="sub">長い休憩までの作業の回数<input class="pc" type="number" min="2" max="10" value="'+q.lc+'"></label><p class="sub">変更は、次の「はじめる」から反映されます。</p><button class="sm pok">保存</button> <button class="lnk pcx">やめる</button></div>';
+ document.body.appendChild(o);const g=a=>o.querySelector(a),n=(c,a,b,d)=>{const v=parseInt(g(c).value,10);return v>=a&&v<=b?v:d};
+ o.onclick=e=>{const v=e.target.dataset&&e.target.dataset.v;if(v){const a=v.split(",");g(".pw").value=a[0];g(".ps").value=a[1];g(".pl").value=a[2];g(".pc").value=a[3]}};
+ g(".pcx").onclick=()=>o.remove();
+ g(".pok").onclick=()=>{S.pomo={w:n(".pw",1,180,25),sb:n(".ps",1,60,5),lb:n(".pl",1,120,15),lc:n(".pc",2,10,4)};save();cloudSave();o.remove();draw()}}
 function pauseToggle(){if(!S.run)return;
- if(S.run.paused){S.run.t0=Date.now();S.run.lt=Date.now();S.run.paused=null;lastHb=Date.now();wlock()}
+ if(S.run.paused){if(S.run.pm)S.run.pst+=Date.now()-S.run.paused;S.run.t0=Date.now();S.run.lt=Date.now();S.run.paused=null;lastHb=Date.now();wlock()}
  else{const sec=el();if(sec>=1)commit(sec);S.run.paused=Date.now();wrel()}
  save();cloudSave();sync();draw()}
 let replyTo=null,pend=null;const imgC={};
@@ -334,8 +360,8 @@ $("#v").addEventListener("input",e=>{if(e.target.id=="pt")draftP=e.target.value}
 function fxDraw(){let o=$("#fx");if(!(S.run&&S.run.fx)){if(o)o.remove();return}
  if(!o){o=document.createElement("div");o.id="fx";o.innerHTML='<div class="clk"></div><div class="fxs"></div><div id="fxt" class="fxt">00:00</div><div class="fxbar"><i id="fxb"></i></div><div id="fxd" class="sub"></div><div class="fxbt"><button class="go" data-fp="1">⏸ 一時停止</button><button class="go stop" data-fe="1">おわる</button><button class="lnk" data-fq="1">もどる</button></div>';
   o.onclick=e=>{const d=e.target.dataset;if(d.fe)stop();if(d.fp)pauseToggle();if(d.fq){S.run.fx=false;save();draw()}};document.body.appendChild(o)}
- o.querySelector(".fxs").textContent=(S.subj[S.run.s]||"")+(S.run.paused?"・一時停止中":" に集中中");o.querySelector("[data-fp]").textContent=S.run.paused?"▶ 再開":"⏸ 一時停止";clock()}
-function fxUpd(e,t){const f=$("#fxt");if(!f||!S.run)return;f.textContent=fmt(S.run.acc+e);$("#fxd").textContent="今日 "+Math.floor(t/60)+"分 / 目標 "+S.goal+"分";$("#fxb").style.width=Math.min(100,t/(S.goal*60)*100)+"%"}
+ o.querySelector(".fxs").textContent=(S.subj[S.run.s]||"")+(S.run.paused?"・一時停止中":S.run.ph=="b"?"・休憩中☕":" に集中中");o.querySelector("[data-fp]").textContent=S.run.paused?"▶ 再開":"⏸ 一時停止";clock()}
+function fxUpd(d){const f=$("#fxt");if(!f||!S.run)return;f.textContent=d.tm;$("#fxd").textContent=d.lab;$("#fxb").style.width=d.pr*100+"%"}
 const isAcct=()=>acct&&!acct.isAnonymous,EM2=id=>id+"@study-island.invalid";
 function cloudSave(){if(!db||!uid||!isAcct())return Promise.resolve();S.t=Date.now();const o=Object.assign({},S);delete o.run;save();return db.doc("users/"+uid).set({data:JSON.stringify(o),t:S.t}).catch(e=>{fbErr=e.message})}
 async function cloudPull(){if(!db||!uid||!isAcct()||S.run)return;try{const d=await db.doc("users/"+uid).get();if(!d.exists)return;const c=d.data();
