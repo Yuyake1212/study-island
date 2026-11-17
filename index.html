@@ -109,6 +109,7 @@ nav button{position:relative}
 .ov label{display:block;margin:8px 0;text-align:left}
 .ring{width:min(240px,27vh);height:min(240px,27vh);width:min(240px,27dvh);height:min(240px,27dvh)}
 @media(max-height:740px){.ring{width:min(240px,22vh);height:min(240px,22vh);width:min(240px,22dvh);height:min(240px,22dvh)}}
+.isl .g{background:linear-gradient(135deg,#fff3b0,#ffb3de,#a6e3ff,#c7b8ff);box-shadow:0 0 20px #fff3b0,0 0 34px #ffb3de}
 </style></head><body><main>
 <div class="top"><h1>🏝️ 勉強アイランド</h1><div style="display:flex;align-items:center;gap:10px"><span class="clk"></span><div class="badge" id="st"></div></div></div>
 <div id="v"></div></main>
@@ -119,11 +120,12 @@ nav button{position:relative}
 <script src="config.js"></script>
 <script>
 const KEY="studyisland.v1",$=s=>document.querySelector(s);
-const CO=["🌱","🌲","🌳","🌼","🍄","🌸","🏠","⛺","🌻","🌴","🌷","🍃"],RL=["🦊","🦆","🐚","⛩️","🌈","🦋","🐢","🎡","🐠","🦜"],SR=["🗼","🦩","🎠","🪁","🛶"],LEG=["🦄","🐉","🏯","🌋"],MY=["🌠","🪐","👑"],RARE=[...RL,...SR,...LEG,...MY],GL=[15,30,60,90,120],CIRC=2*Math.PI*52,ALLN=CO.length+RL.length+SR.length+LEG.length+MY.length;
-const roll=()=>{const r=Math.random(),a=r<.003?MY:r<.02?LEG:r<.07?SR:r<.22?RL:CO;return a[Math.floor(Math.random()*a.length)]};
-const cls=x=>MY.includes(x)?"m":LEG.includes(x)?"l":SR.includes(x)?"s":RARE.includes(x)?"r":"";
-const EM=["🌊","🏝️","🌴","🏡","🏘️","⛵","🏰","☁️","🐉","🌌"],TT=["はじまりの海","小さな島","みどりの島","にぎやかな島","島の村","港町","王国の島","空に浮かぶ島","伝説の島","神話の島"],LP=[0,1,3,6,10,20,40,80,150,300],LG=[0,2,6,15,30,60,120,250,500,1000];
+const CO=["🌱","🌲","🌳","🌼","🍄","🌸","🏠","⛺","🌻","🌴","🌷","🍃"],RL=["🦊","🦆","🐚","⛩️","🌈","🦋","🐢","🎡","🐠","🦜"],SR=["🗼","🦩","🎠","🪁","🛶"],LEG=["🦄","🐉","🏯","🌋"],MY=["🌠","🪐","👑"],GN=["🌟","💎"],RARE=[...RL,...SR,...LEG,...MY,...GN],GL=[15,30,60,90,120],CIRC=2*Math.PI*52,ALLN=CO.length+RL.length+SR.length+LEG.length+MY.length+GN.length;
+const roll=()=>{const r=Math.random(),a=r<.0005?GN:r<.0035?MY:r<.0205?LEG:r<.0705?SR:r<.2205?RL:CO;return a[Math.floor(Math.random()*a.length)]};
+const cls=x=>GN.includes(x)?"g":MY.includes(x)?"m":LEG.includes(x)?"l":SR.includes(x)?"s":RARE.includes(x)?"r":"";
+const EM=["🌊","🏝️","🌴","🏡","🏘️","⛵","🏰","☁️","🐉","🌌"],TT=["はじまりの海","小さな島","みどりの島","にぎやかな島","島の村","港町","王国の島","空に浮かぶ島","伝説の島","神話の島"],LP=[0,1,3,6,10,17,26,37,50,65,82,101,123,149,179,214,254,300,353,413],LG=[0,2,6,15,30,60,120,250,500,1000];
 const lvOf=(h,L)=>{let v=0;L.forEach((x,i)=>{if(h>=x)v=i});return v};
+const PE=["🌊","🏝️","🌴","🏡","🏘️","⛵","🚢","🏰","🌉","🗼","🌆","🚀","☁️","🎆","🐉","🌋","🔮","🪐","🌌","👑"],PT=["はじまりの海","小さな島","みどりの島","にぎやかな島","島の村","港町","貿易の島","王国の島","橋の都","空へのびる街","夕焼けの大都市","宇宙港の島","空に浮かぶ島","花火の島","伝説の島","火を宿す島","魔法の島","星々の島","銀河の島","神話の島"];
 let S={goal:30,subj:["英語","数学","国語","その他"],cur:0,days:{},items:[],rem:0,run:null},tab="h",tk=null;
 try{Object.assign(S,JSON.parse(localStorage.getItem(KEY))||{})}catch(e){}
 if(S.run){S.run.acc=S.run.acc||0;S.run.got=S.run.got||[];S.run.ch=Math.floor((S.run.acc+(S.run.paused?0:(Date.now()-S.run.t0)/1000))/1800)}
@@ -145,12 +147,12 @@ function commit(sec){const T0=Object.values(S.days).reduce((a,r)=>a+r.sec,0),k=k
  const v=lvOf((T0+sec)/3600,LP);if(v>lvOf(T0/3600,LP)){S.run.up=v;S.run.upn=1}
  if(!w&&r.sec>=r.goal*60)S.run.cl=1;S.run.acc+=sec;S.run.t0=Date.now();return n}
 function flush(){const sec=el();if(sec<1)return;const c=!S.run.cl,n=commit(sec);save();cloudSave();lastHb=Date.now();sync();
- if(S.run.upn){S.run.upn=0;toast("🎊 島が進化! "+EM[S.run.up]+" "+TT[S.run.up])}else if(c&&S.run.cl)toast("🎉 今日の目標達成!");else if(n){const g=S.run.got.slice(-n);toast(g.some(x=>MY.includes(x))?"🌠 神話級の仲間が現れた!! "+g.join(" "):"島に仲間が増えたよ "+g.join(" "))}}
+ if(S.run.upn){S.run.upn=0;toast("🎊 島が進化! "+PE[S.run.up]+" "+PT[S.run.up])}else if(c&&S.run.cl)toast("🎉 今日の目標達成!");else if(n){const g=S.run.got.slice(-n);toast(g.some(x=>GN.includes(x))?"🌟 創世級の奇跡!! "+g.join(" "):g.some(x=>MY.includes(x))?"🌠 神話級の仲間が現れた!! "+g.join(" "):"島に仲間が増えたよ "+g.join(" "))}}
 function stop(){const sec=el();
  if(S.run.acc+sec<60){S.run=null;wrel();save();sync();draw();return modal('<p>1分未満は記録されません。<br>もう少し続けてみよう。</p>')}
  if(sec>0)commit(sec);const run=S.run;S.run=null;wrel();save();cloudSave();sync();draw();
  const m=Math.floor(run.acc/60),got=run.got;
- modal('<div class="big">'+(got.length?got.map(x=>esc(x)).join(" "):"🌊")+'</div><h2>'+m+'分 おつかれさま</h2><p class="sub">'+(got.length?"島に"+got.length+"個ふえたよ"+(got.some(x=>MY.includes(x))?"(🌠神話級!!!🌠)":got.some(x=>LEG.includes(x))?"(✨レジェンド!!✨)":got.some(x=>SR.includes(x))?"(スーパーレア!)":got.some(x=>RARE.includes(x))?"(レアあり!)":""):"あと"+Math.ceil((600-S.rem)/60)+"分で島がそだつよ")+'</p>'+(run.up!==undefined?'<p>🎊 島が進化!<br>'+EM[run.up]+" "+TT[run.up]+'</p>':'')+(run.cl?'<p>🎉 今日の目標達成!</p>':''))}
+ modal('<div class="big">'+(got.length?got.map(x=>esc(x)).join(" "):"🌊")+'</div><h2>'+m+'分 おつかれさま</h2><p class="sub">'+(got.length?"島に"+got.length+"個ふえたよ"+(got.some(x=>GN.includes(x))?"(🌟創世級の奇跡!!!!🌟)":got.some(x=>MY.includes(x))?"(🌠神話級!!!🌠)":got.some(x=>LEG.includes(x))?"(✨レジェンド!!✨)":got.some(x=>SR.includes(x))?"(スーパーレア!)":got.some(x=>RARE.includes(x))?"(レアあり!)":""):"あと"+Math.ceil((600-S.rem)/60)+"分で島がそだつよ")+'</p>'+(run.up!==undefined?'<p>🎊 島が進化!<br>'+PE[run.up]+" "+PT[run.up]+'</p>':'')+(run.cl?'<p>🎉 今日の目標達成!</p>':''))}
 function dispT(e,t){const r=S.run,td=Math.floor(t/60)+"分";
  if(r&&r.pm){const L=r.plen,x=(r.paused?r.paused-r.pst:Date.now()-r.pst)/1000,rem=Math.max(0,Math.ceil(L-x)),q=P(),b=r.ph=="b";
   return{tm:pad(Math.floor(rem/60))+":"+pad(rem%60),pr:Math.min(1,x/L),brk:b,lab:(b?(r.lg?"長い休憩":"休憩"):"作業 "+((r.n%q.lc)+1)+"/"+q.lc)+" ・ 今日 "+td}}
@@ -161,7 +163,7 @@ function pomoStep(){const r=S.run;if(!r||!r.pm||r.paused)return;let g=0,ch=0;
   if(r.ph=="w"){const sec=Math.max(0,(end-r.t0)/1000);if(sec>=1)commit(sec);r.n=(r.n||0)+1;r.lg=r.n%q.lc==0;r.ph="b";r.plen=(r.lg?q.lb:q.sb)*60;r.pst=end;ch=1}
   else{r.ph="w";r.plen=q.w*60;r.pst=end;r.t0=end;ch=2}}
  if(ch){r.lt=Date.now();if(ch==1)r.t0=Date.now();save();cloudSave();sync();draw();chime();toast(r.ph=="b"?(r.lg?"長い休憩":"休憩")+" "+Math.round(r.plen/60)+"分☕":"作業スタート💪 "+Math.round(r.plen/60)+"分");
-  if(r.upn){r.upn=0;toast("🎊 島が進化! "+EM[r.up]+" "+TT[r.up])}}}
+  if(r.upn){r.upn=0;toast("🎊 島が進化! "+PE[r.up]+" "+PT[r.up])}}}
 function tick(){if(S.run&&!S.run.paused){const n=Date.now(),g=(n-(S.run.lt||n))/1000;S.run.lt=n;if(g>900&&(!S.run.pm||S.run.ph!="b")&&!confirm("約"+Math.round(g/60)+"分、画面から離れていたようです。\nこの時間も勉強時間に数えますか?\n(OK=数える / キャンセル=数えない)")){S.run.t0+=g*1000;if(S.run.pm)S.run.pst+=g*1000}}
  pomoStep();let e=el(),t=today().sec+e;
  if(S.run&&!S.run.paused){const c=Math.floor((S.run.acc+e)/1800);if(!S.run.pm&&c>(S.run.ch||0)){S.run.ch=c;chime();toast("🔔 "+c*30+"分たちました")}if(e>=300){flush();e=el();t=today().sec+e}}
@@ -172,7 +174,7 @@ function home(){const run=!!S.run;
  +(run?'<button class="go" data-ps="1">'+(S.run.paused?"▶ 再開":"⏸ 一時停止")+'</button><div style="height:10px"></div>':'')+'<button class="go'+(run?" stop":"")+'" id="go">'+(run?"おわる":"はじめる")+'</button>'+(run?'<button class="lnk" data-fx="1">集中画面にする</button>':'')+'</div>'
  }
 function islV(){const p=S.rem+el(),tot=(Object.values(S.days).reduce((a,r)=>a+r.sec,0)+el())/3600,v=lvOf(tot,LP),nx=LP[v+1];
- return{e:EM[v],t:"Lv."+(v+1)+" "+TT[v],s:nx?"次の進化「"+TT[v+1]+"」まで あと"+Math.max(0.1,Math.round((nx-tot)*10)/10)+"時間":"最終形態に到達!",pc:nx?(tot-LP[v])/(nx-LP[v])*100:100,nx:"次の仲間まで あと"+Math.max(1,Math.ceil((600-p%600)/60))+"分",pb:p%600/6}}
+ return{e:PE[v],t:"Lv."+(v+1)+" "+PT[v],s:nx?"次の進化「"+PT[v+1]+"」まで あと"+Math.max(0.1,Math.round((nx-tot)*10)/10)+"時間":"最終形態に到達!",pc:nx?(tot-LP[v])/(nx-LP[v])*100:100,nx:"次の仲間まで あと"+Math.max(1,Math.ceil((600-p%600)/60))+"分",pb:p%600/6}}
 function islTick(){if(S.items.length!==lastN)return draw();if(!$("#ihe"))return;const o=islV();$("#ihe").textContent=o.e;$("#ilt").textContent=o.t;$("#ils").textContent=o.s;$("#ilb").style.width=o.pc+"%";$("#inx").textContent=o.nx;$("#ipb").style.width=o.pb+"%"}
 function isl(){const n=S.items.length,o=islV();lastN=n;
  return '<div class="card"><div class="hero" id="ihe">'+o.e+'</div><h2 id="ilt" style="text-align:center;margin:4px 0">'+o.t+'</h2><p class="sub" id="ils" style="text-align:center;margin:0 0 6px">'+o.s+'</p><div class="bar"><i id="ilb" style="width:'+o.pc+'%"></i></div></div>'
@@ -192,8 +194,8 @@ const INF={"🌱":["新芽","島のはじまりのやわらかな芽"],"🌲":["
 "🦊":["キツネ","島をこっそり探検中"],"🦆":["アヒル","池をすいすい泳ぐ"],"🐚":["貝がら","耳をすますと波の音"],"⛩️":["鳥居","島を守る赤い門"],"🌈":["虹","雨あがりの大きな橋"],"🦋":["ちょうちょ","花から花へひらひら"],"🐢":["カメ","ゆっくりでも進めば着く"],"🎡":["観覧車","島を一望できる"],"🐠":["熱帯魚","海辺をきらきら泳ぐ"],"🦜":["オウム","島の歌をおぼえる"],
 "🗼":["展望タワー","遠くまで見わたせる"],"🦩":["フラミンゴ","片足で立つ島の名物"],"🎠":["メリーゴーランド","夜はきらきら回る"],"🪁":["たこ","風をつかんで高くあがる"],"🛶":["カヌー","波のうえをすいすい"],
 "🦄":["ユニコーン","願いをかなえる伝説の馬"],"🐉":["ドラゴン","島を見守る守り神"],"🏯":["お城","積み重ねの証"],"🌋":["火山","島の底に眠る大きな力"],
-"🌠":["流れ星","願いごとを聞いてくれる"],"🪐":["ひみつの惑星","島の空にだけ見える星"],"👑":["王のかんむり","努力を重ねた者だけの宝"]};
-const tierOf=x=>MY.includes(x)?["★★★★★ 神話",.003/MY.length]:LEG.includes(x)?["★★★★ レジェンド",.017/LEG.length]:SR.includes(x)?["★★★ スーパーレア",.05/SR.length]:RL.includes(x)?["★★ レア",.15/RL.length]:["★ ふつう",.78/CO.length];
+"🌠":["流れ星","願いごとを聞いてくれる"],"🪐":["ひみつの惑星","島の空にだけ見える星"],"👑":["王のかんむり","努力を重ねた者だけの宝"],"🌟":["創世の星","島が生まれたときの光"],"💎":["時の結晶","積み重ねた時間が形になった"]};
+const tierOf=x=>GN.includes(x)?["★★★★★★ 創世",.0005/GN.length]:MY.includes(x)?["★★★★★ 神話",.003/MY.length]:LEG.includes(x)?["★★★★ レジェンド",.017/LEG.length]:SR.includes(x)?["★★★ スーパーレア",.05/SR.length]:RL.includes(x)?["★★ レア",.15/RL.length]:["★ ふつう",.7795/CO.length];
 function itemInfo(i){const x=S.items[i];if(x===undefined)return"";const q=INF[x]||[x,""],t=tierOf(x);
  return'<button class="lnk" data-ic="1" style="float:right;padding:0 4px">✕</button><b>'+esc(x)+" "+esc(q[0])+"</b> "+t[0]+"<br>"+esc(q[1])+"<br>"+(i+1)+"番目の仲間 ・ 持っている数 ×"+S.items.filter(y=>y==x).length+" ・ 出る確率 約"+(Math.round(t[1]*1000)/10)+"%"}
 const selClose=()=>{selItem=-1;const b=$("#idt");if(b){b.className="dt";b.innerHTML=""}document.querySelectorAll(".isl span.sel").forEach(x=>x.classList.remove("sel"))};
