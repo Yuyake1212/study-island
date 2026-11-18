@@ -252,8 +252,9 @@ $("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
  if(d.im)viewImg(d.im);
  if(d.rp){const q=posts.find(x=>x.id==d.rp);if(q){replyTo={id:q.id,uid:q.uid,nick:q.nick||"?",text:(q.text||"").slice(0,60)};draw();const t=$("#pt");if(t)t.focus()}}
  if(d.rc){replyTo=null;draw()}
- if(d.qj){const e=document.getElementById("p-"+d.qj);if(e){e.scrollIntoView({behavior:"smooth",block:"center"});e.classList.add("hl");setTimeout(()=>e.classList.remove("hl"),1600)}else toast("元の投稿は、表示できる範囲より古いようです")}
- if(d.dp&&db&&confirm("この投稿を消しますか?")){const q=posts.find(x=>x.id==d.dp);if(q&&q.th)db.doc("groups/"+S.gid+"/images/"+d.dp).delete().catch(()=>{});db.doc("groups/"+S.gid+"/posts/"+d.dp).delete().catch(()=>{})}
+ if(d.mp){e.target.textContent="読み込み中…";moreP()}
+ if(d.qj){const e=document.getElementById("p-"+d.qj);if(e){e.scrollIntoView({behavior:"smooth",block:"center"});e.classList.add("hl");setTimeout(()=>e.classList.remove("hl"),1600)}else toast("元の投稿はまだ読み込んでいません。下の「さらに古い投稿を読み込む」を押すと見られます")}
+ if(d.dp&&db&&confirm("この投稿を消しますか?")){const q=posts.find(x=>x.id==d.dp);if(q&&q.th)db.doc("groups/"+S.gid+"/images/"+d.dp).delete().catch(()=>{});db.doc("groups/"+S.gid+"/posts/"+d.dp).delete().catch(()=>{});pc.delete(d.dp);posts=[...pc.values()].sort((a,b)=>b.at-a.at);const l=$("#pl");if(l)l.innerHTML=postList()}
  if(d.ac)authForm(1);if(d.li)authForm(0);if(d.lo&&confirm("ログアウトすると、この端末の記録は消えます(クラウドには保存済み)。よろしいですか?"))logout();
  if(d.gc){const v=parseInt(prompt("1日の目標を分で入力(1〜1440)"),10);if(v>=1&&v<=1440){S.goal=v;const r=S.days[key()];if(r)r.goal=v;save();cloudSave();sync();draw()}}
  if(d.wl){S.wl=(S.wl===false);save();if(S.wl===false)wrel();else wlock();draw()}
@@ -277,14 +278,14 @@ function listen(){if(unsub)unsub();unsub=null;if(!db||!S.gid)return;
 function sync(x){if(!db||!S.gid||!uid)return;
  const t=today(),tot=Object.values(S.days).reduce((a,r)=>a+r.sec,0);
  return db.doc("groups/"+S.gid+"/members/"+uid).set(Object.assign({nick:S.nick,goal:S.goal,todayKey:key(),todaySec:Math.min(86400,Math.round(t.sec)),totalSec:Math.round(tot),studying:!!(S.run&&!S.run.paused&&S.run.ph!=="b"),runStart:S.run&&!S.run.paused&&S.run.ph!=="b"?S.run.t0:null,hb:Date.now(),hide:!!S.hide,left:false,onl:document.visibilityState=="visible",pAt:Date.now()},x||{}),{merge:true}).catch(e=>{fbErr=e.message})}
-function leave(){if(unsub)unsub();unsub=null;if(db&&S.gid&&uid)db.doc("groups/"+S.gid+"/members/"+uid).set({left:true,studying:false,runStart:null},{merge:true}).catch(()=>{});S.gid=null;mem={};posts=[];postsOff();save();cloudSave();draw()}
+function leave(){if(unsub)unsub();unsub=null;if(db&&S.gid&&uid)db.doc("groups/"+S.gid+"/members/"+uid).set({left:true,studying:false,runStart:null},{merge:true}).catch(()=>{});S.gid=null;mem={};pReset();postsOff();save();cloudSave();draw()}
 function cheer(id,b){if(!db||!S.gid)return;const k=key();S.chd=S.chd||{};if(S.chd[id]==k)return;
  S.chd[id]=k;save();b.disabled=true;b.textContent="👏送った!";if(navigator.vibrate)navigator.vibrate(30);toast("応援を送りました👏");
  db.doc("groups/"+S.gid+"/members/"+id).update({cheers:firebase.firestore.FieldValue.increment(1),lastFrom:S.nick||"だれか",lastAt:Date.now()}).catch(x=>{delete S.chd[id];save();fbErr=x.message;draw();toast("送れませんでした")})}
 async function join(c,mk){if(!await fbInit()){return modal("<p>接続できませんでした。<br>"+esc(fbErr||"設定を確認してください")+"</p>")}
  if(!S.nick){const n=(prompt("ニックネーム")||"").trim().slice(0,12);if(!n)return;S.nick=n}
  try{const r=db.doc("groups/"+c);if(mk)await r.set({created:Date.now()});else if(!(await r.get()).exists)return modal("<p>そのコードのグループは見つかりません。</p>");
-  S.seen=Date.now();S.gid=c;posts=[];postsOff();S.lastRead=Date.now();save();cloudSave();await sync({joined:Date.now()});listen();draw()}catch(e){fbErr=e.message;draw()}}
+  S.seen=Date.now();S.gid=c;pReset();postsOff();S.lastRead=Date.now();save();cloudSave();await sync({joined:Date.now()});listen();draw()}catch(e){fbErr=e.message;draw()}}
 const err=()=>fbErr?'<p class="sub">接続エラー: '+esc(fbErr)+'</p>':"";
 const live=m=>m.studying&&m.runStart&&Date.now()-m.hb<72e5;
 const la=m=>live(m)?Math.floor(Math.max(0,Date.now()-m.runStart)/60000)*60:0;
@@ -330,7 +331,13 @@ function pauseToggle(){if(!S.run)return;
  if(S.run.paused){if(S.run.pm)S.run.pst+=Date.now()-S.run.paused;S.run.t0=Date.now();S.run.lt=Date.now();S.run.paused=null;lastHb=Date.now();wlock()}
  else{const sec=el();if(sec>=1)commit(sec);S.run.paused=Date.now();wrel()}
  save();cloudSave();sync();draw()}
-let replyTo=null,pend=null;const imgC={};
+let replyTo=null,pend=null;const imgC={},pc=new Map();let pmore=false,pTouched=false,pbusy=false;
+const pReset=()=>{pc.clear();posts=[];pmore=false;pTouched=false};
+async function moreP(){if(pbusy||!pmore||!db||!S.gid)return;const last=posts[posts.length-1];if(!last)return;pbusy=true;pTouched=true;
+ try{const q=await db.collection("groups/"+S.gid+"/posts").orderBy("at","desc").startAfter(last.at).limit(30).get();
+  q.forEach(d=>pc.set(d.id,Object.assign({id:d.id},d.data())));if(q.size<30)pmore=false;
+  posts=[...pc.values()].sort((a,b)=>b.at-a.at);const l=$("#pl");if(l)l.innerHTML=postList()}
+ catch(e){fbErr=e.message;toast("読み込めませんでした")}pbusy=false}
 const thImg=p=>p.th&&/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(p.th)?'<img class="th" src="'+p.th+'" data-im="'+esc(p.id)+'" alt="添付画像">':"";
 function rsz(f,max,q){return new Promise((ok,ng)=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas"),w=c.width=Math.round(im.width*k),h=c.height=Math.round(im.height*k),x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,w,h);x.drawImage(im,0,0,w,h);URL.revokeObjectURL(u);ok(c.toDataURL("image/jpeg",q))};im.onerror=ng;im.src=u})}
 async function pickImg(f){if(!f)return;toast("画像を処理中…");
@@ -355,10 +362,12 @@ function reportText(){const r=S.days[key()],f=x=>x>=60?Math.floor(x/60)+"時間"
 function postList(){if(!posts.length)return'<p class="sub">まだ投稿がありません。最初の報告をしてみよう!</p>';
  return posts.map(p=>'<div class="mm" id="p-'+esc(p.id)+'" style="align-items:flex-start"><div style="flex:1;min-width:0"><b>'+esc(p.nick||"?")+'</b> <span class="sub">'+tmf(p.at)+(p.re&&p.re.uid==uid?" ・あなたへの返信":"")+'</span>'
   +(p.re?'<div class="qt" data-qj="'+esc(p.re.id)+'">↩ '+esc(p.re.nick||"?")+': '+esc(p.re.text||"")+'</div>':'')
-  +'<div style="white-space:pre-wrap;word-break:break-word">'+esc(p.text)+'</div>'+thImg(p)+'</div><button class="lnk" data-rp="'+esc(p.id)+'">↩</button>'+(p.uid==uid?'<button class="lnk" data-dp="'+esc(p.id)+'">✕</button>':'')+'</div>').join("")}
+  +'<div style="white-space:pre-wrap;word-break:break-word">'+esc(p.text)+'</div>'+thImg(p)+'</div><button class="lnk" data-rp="'+esc(p.id)+'">↩</button>'+(p.uid==uid?'<button class="lnk" data-dp="'+esc(p.id)+'">✕</button>':'')+'</div>').join("")+(pmore?'<button class="chip" data-mp="1" style="display:block;margin:10px auto 0">さらに古い投稿を読み込む</button>':'')}
 function brd(){if(!OKB||!S.gid)return'<div class="card"><h2 style="margin-top:0">掲示板</h2><p class="sub">「みんな」タブでグループに参加すると使えます。</p></div>';
  return'<div class="card"><h2 style="margin-top:0">みんなの掲示板 <span class="sub">グループ '+esc(S.gid)+'</span></h2>'+rqBar()+'<textarea id="pt" maxlength="140" rows="3" placeholder="今日やったことを報告しよう(140字まで)">'+esc(draftP)+'</textarea>'+(pend?'<div class="rq"><img class="pv" src="'+pend.th+'" alt=""><span>画像を添付中</span><button class="lnk" data-px="1">✕</button></div>':'')+'<div style="display:flex;gap:8px;align-items:center"><button class="chip" data-pi="1">今日の勉強を入れる</button><button class="chip" data-pm="1">🖼 画像</button><input type="file" id="pf" accept="image/*" hidden><span style="flex:1"></span><button class="sm" style="margin:0" data-pp="1">投稿</button></div>'+err()+'</div><div class="card" id="pl">'+postList()+'</div>'}
-function postsOn(){if(unsubP||!db||!S.gid)return;unsubP=db.collection("groups/"+S.gid+"/posts").orderBy("at","desc").limit(30).onSnapshot(q=>{posts=q.docs.map(d=>Object.assign({id:d.id},d.data()));if(S.lastRead===undefined){S.lastRead=Date.now();save()}const l=$("#pl");if(tab=="b"){if(l)l.innerHTML=postList();S.lastRead=Date.now();save()}updBadge()},e=>{fbErr=e.message})}
+function postsOn(){if(unsubP||!db||!S.gid)return;unsubP=db.collection("groups/"+S.gid+"/posts").orderBy("at","desc").limit(30).onSnapshot(q=>{const lastAt=q.size?q.docs[q.docs.length-1].data().at:0;
+  q.docChanges().forEach(c=>{const dt=c.doc.data();if(c.type=="removed"){if(!(q.size>=30&&dt.at<lastAt))pc.delete(c.doc.id)}else pc.set(c.doc.id,Object.assign({id:c.doc.id},dt))});
+  if(!pTouched)pmore=q.size>=30;posts=[...pc.values()].sort((a,b)=>b.at-a.at);if(S.lastRead===undefined){S.lastRead=Date.now();save()}const l=$("#pl");if(tab=="b"){if(l)l.innerHTML=postList();S.lastRead=Date.now();save()}updBadge()},e=>{fbErr=e.message})}
 function postsOff(){if(unsubP){unsubP();unsubP=null}}
 $("#v").addEventListener("input",e=>{if(e.target.id=="pt")draftP=e.target.value});
 function fxDraw(){let o=$("#fx");if(!(S.run&&S.run.fx)){if(o)o.remove();return}
