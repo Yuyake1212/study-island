@@ -112,10 +112,14 @@ nav button{position:relative}
 .isl .g{background:linear-gradient(135deg,#fff3b0,#ffb3de,#a6e3ff,#c7b8ff);box-shadow:0 0 20px #fff3b0,0 0 34px #ffb3de}
 body{-webkit-user-select:text;user-select:text}
 button,nav,.ring,.seg,.chips,.go,.cal,.wk,.isl,.hero,#fx{-webkit-user-select:none;user-select:none}
+.ov input[type=checkbox]{width:auto;margin-right:8px;vertical-align:middle}
+.srow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:13px 2px;border:0;border-top:1px solid var(--ln);background:none;color:var(--ink);font:inherit;font-size:15px;text-align:left}
+.srow:first-of-type{border-top:0}.srow span{color:var(--sub);font-size:14px;text-align:right}
+@media(max-width:400px){nav{padding-left:4px;padding-right:4px}nav button{font-size:10px}nav button b{font-size:18px}}
 </style></head><body><main>
 <div class="top"><h1>🏝️ 勉強アイランド</h1><div style="display:flex;align-items:center;gap:10px"><span class="clk"></span><div class="badge" id="st"></div></div></div>
 <div id="v"></div></main>
-<nav id="nav"><button data-t="h"><b>🏠</b>ホーム</button><button data-t="i"><b>🏝️</b>島</button><button data-t="m"><b>👥</b>みんな</button><button data-t="b"><b>💬</b>掲示板<em id="bg" class="bdg"></em></button><button data-t="r"><b>📊</b>記録</button></nav>
+<nav id="nav"><button data-t="h"><b>🏠</b>ホーム</button><button data-t="i"><b>🏝️</b>島</button><button data-t="m"><b>👥</b>みんな</button><button data-t="b"><b>💬</b>掲示板<em id="bg" class="bdg"></em></button><button data-t="r"><b>📊</b>記録</button><button data-t="s"><b>⚙️</b>設定</button></nav>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -164,11 +168,11 @@ function pomoStep(){const r=S.run;if(!r||!r.pm||r.paused)return;let g=0,ch=0;
  while(g++<60){const end=r.pst+r.plen*1000;if(Date.now()<end)break;const q=P();
   if(r.ph=="w"){const sec=Math.max(0,(end-r.t0)/1000);if(sec>=1)commit(sec);r.n=(r.n||0)+1;r.lg=r.n%q.lc==0;r.ph="b";r.plen=(r.lg?q.lb:q.sb)*60;r.pst=end;ch=1}
   else{r.ph="w";r.plen=q.w*60;r.pst=end;r.t0=end;ch=2}}
- if(ch){r.lt=Date.now();if(ch==1)r.t0=Date.now();save();cloudSave();sync();draw();chime();toast(r.ph=="b"?(r.lg?"長い休憩":"休憩")+" "+Math.round(r.plen/60)+"分☕":"作業スタート💪 "+Math.round(r.plen/60)+"分");
+ if(ch){r.lt=Date.now();if(ch==1)r.t0=Date.now();save();cloudSave();sync();draw();const mm=r.ph=="b"?(r.lg?"長い休憩":"休憩")+" "+Math.round(r.plen/60)+"分☕":"作業スタート💪 "+Math.round(r.plen/60)+"分";chime();toast(mm);ntf("pm",r.ph=="b"?"休憩の時間です":"作業の時間です",mm);
   if(r.upn){r.upn=0;toast("🎊 島が進化! "+PE[r.up]+" "+PT[r.up])}}}
 function tick(){if(S.run&&!S.run.paused){const n=Date.now(),g=(n-(S.run.lt||n))/1000;S.run.lt=n;if(g>900&&(!S.run.pm||S.run.ph!="b")&&!confirm("約"+Math.round(g/60)+"分、画面から離れていたようです。\nこの時間も勉強時間に数えますか?\n(OK=数える / キャンセル=数えない)")){S.run.t0+=g*1000;if(S.run.pm)S.run.pst+=g*1000}}
  pomoStep();let e=el(),t=today().sec+e;
- if(S.run&&!S.run.paused){const c=Math.floor((S.run.acc+e)/1800);if(!S.run.pm&&c>(S.run.ch||0)){S.run.ch=c;chime();toast("🔔 "+c*30+"分たちました")}if(e>=300){flush();e=el();t=today().sec+e}}
+ if(S.run&&!S.run.paused){const c=Math.floor((S.run.acc+e)/1800);if(!S.run.pm&&c>(S.run.ch||0)){S.run.ch=c;chime();toast("🔔 "+c*30+"分たちました");ntf("ch","30分たちました","勉強を始めてから "+c*30+"分です🔔")}if(e>=300){flush();e=el();t=today().sec+e}}
  const d=dispT(e,t);fxUpd(d);const a=$("#tm");if(!a)return;a.textContent=d.tm;const rg=$("#rg");rg.style.strokeDashoffset=CIRC*(1-d.pr);rg.style.stroke=d.brk?"var(--sea)":"url(#rg2)";$("#td").textContent=d.lab}
 function home(){const run=!!S.run;
  return examPill()+'<div class="card">'+seg(run)+'<div class="ring"><svg viewBox="0 0 120 120"><defs><linearGradient id="rg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sun)"/><stop offset="1" style="stop-color:#ff8a5b"/></linearGradient></defs><circle cx="60" cy="60" r="52" fill="none" stroke="var(--ln)" stroke-width="9"/><circle id="rg" cx="60" cy="60" r="52" fill="none" stroke="url(#rg2)" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+CIRC+'" stroke-dashoffset="'+CIRC+'"/></svg><div class="c"><div id="tm">00:00</div><div class="sub" id="td"></div></div></div>'
@@ -186,9 +190,14 @@ function rec(){const dn=["日","月","火","水","木","金","土"],cols=[];let 
  for(let i=0;i<7;i++){const k=key(d),r=S.days[k],g=r?r.goal*60:S.goal*60,h=r?Math.min(100,r.sec/g*100):0;cols.push('<div data-k="'+k+'" tabindex="0"><b class="'+(ok(k)?"ok":"")+'" style="height:'+Math.max(4,h)+'px"></b>'+dn[d.getDay()]+'<br>'+(r?Math.floor(r.sec/60):0)+'分</div>');d.setDate(d.getDate()+1)}
  const a=weekSum(0),b=weekSum(7),df=Math.round((a-b)/60);
  return '<div class="card"><h2 style="margin-top:0">この1週間</h2><div class="wk">'+cols.join("")+'</div><div class="dt" id="dt"></div><p class="sub">棒をタップ(パソコンはカーソルを合わせる)すると、その日の詳しい内容が見られます。棒の高さ=目標に対する達成度(青=達成)。今週 '+Math.floor(a/60)+'分'+(b?'(先週より '+(df>=0?"+":"")+df+'分)':"")+'。お休みは週2回まで連続記録に影響しません。</p></div>'
- +cal()+'<div class="card"><h2 style="margin-top:0">1日の目標</h2><div class="chips" style="justify-content:flex-start">'+[15,30,60,90,120].map(g=>'<button class="chip'+(g==S.goal?" on":"")+'" data-g="'+g+'">'+g+'分</button>').join("")+'<button class="chip'+(GL.includes(S.goal)?"":" on")+'" data-gc="1">'+(GL.includes(S.goal)?"自由入力":S.goal+"分")+'</button></div><button class="lnk" data-wl="1">画面を消さない(勉強中):'+(S.wl===false?"オフ":"オン")+'</button><button class="lnk" data-ex="1">試験日:'+(S.exam&&S.exam.date?esc(S.exam.name||"試験")+" "+S.exam.date:"未設定")+'</button><button class="lnk" data-fs="1">集中画面(勉強中):'+(S.fxoff?"オフ":"オン")+'</button><button class="lnk" data-reset="1">データを消す</button></div>'+acc()}
+ +cal()}
+function set(){const q=P(),row=(d,l,v,x)=>'<button class="srow" data-'+d+'="1"'+(x||"")+'>'+l+(v!==undefined?'<span>'+v+' ›</span>':'')+'</button>';
+ return '<div class="card"><h2 style="margin-top:0">1日の目標</h2><div class="chips" style="justify-content:flex-start;margin:6px 0 0">'+[15,30,60,90,120].map(g=>'<button class="chip'+(g==S.goal?" on":"")+'" data-g="'+g+'">'+g+'分</button>').join("")+'<button class="chip'+(GL.includes(S.goal)?"":" on")+'" data-gc="1">'+(GL.includes(S.goal)?"自由入力":S.goal+"分")+'</button></div></div>'
+ +'<div class="card"><h2 style="margin-top:0">タイマー</h2>'+row("pg","ポモドーロの設定",q.w+"分 / 休憩"+q.sb+"分")+row("wl","画面を消さない(勉強中)",S.wl===false?"オフ":"オン")+row("fs","集中画面(勉強中)",S.fxoff?"オフ":"オン")+'</div>'
+ +'<div class="card"><h2 style="margin-top:0">お知らせ・予定</h2>'+row("nt","デスクトップ通知",S.nt&&S.nt.on?"オン":"オフ")+row("ex","試験日",S.exam&&S.exam.date?esc(S.exam.name||"試験")+" "+S.exam.date:"未設定")+'</div>'
+ +acc()+'<div class="card">'+row("reset","データを消す",undefined,' style="color:#d9534f"')+'</div>'}
 function draw(){const s=streak();$("#st").textContent="🔥 "+s+"日";
- $("#v").innerHTML=tab=="h"?home():tab=="i"?isl():tab=="m"?(lastSoc=soc()):tab=="b"?brd():rec();
+ $("#v").innerHTML=tab=="h"?home():tab=="i"?isl():tab=="m"?(lastSoc=soc()):tab=="b"?brd():tab=="s"?set():rec();
  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t==tab));
  document.body.classList.toggle("ns",tab=="h"||tab=="i");postsOn();if(tab=="b"){S.lastRead=Date.now();save()}updBadge();fxDraw();if(tab=="r"){const l=document.querySelector(".wk div:last-child");if(l){l.classList.add("sel");$("#dt").innerHTML=dayInfo(l.dataset.k)}const t0=document.querySelector(".cal i.td");if(t0){t0.classList.add("sel");$("#dc").innerHTML=dayInfo(t0.dataset.ck)}}clearInterval(tk);if(S.run||tab=="h"||tab=="m"){tick();tk=setInterval(()=>{tick();if(tab=="i")islTick();if(tab=="m")soctick()},1000)}}
 let cm=0,selItem=-1,lastN=-1;
@@ -232,7 +241,7 @@ $("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
  if(d.s!==undefined){S.cur=+d.s;save();draw()}
  if(d.add){const n=(prompt("科目の名前")||"").trim().slice(0,10);if(n){S.subj.push(n);S.cur=S.subj.length-1;save();cloudSave();draw()}}
  if(d.g){S.goal=+d.g;const r=S.days[key()];if(r)r.goal=S.goal;save();cloudSave();draw()}
- if(d.reset&&confirm("記録も島も全部消えます。よろしいですか?")){localStorage.removeItem(KEY);location.reload()}
+ if(d.reset&&confirm("この端末の記録と島を、すべて消します。"+(isAcct()?"\n(アカウントに保存された記録は残り、開き直すと戻ります)":"")+"\nよろしいですか?")&&confirm("本当に消しますか?\nこの操作は元に戻せません。")){localStorage.removeItem(KEY);location.reload()}
  if(d.mk)join(code(),1);
  if(d.jn){const c=(prompt("グループコード(6文字)")||"").trim().toUpperCase();if(c)join(c,0)}
  if(d.ch)cheer(d.ch,e.target);
@@ -242,6 +251,7 @@ $("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
  if(d.ps)pauseToggle();
  if(d.md){S.mode=d.md;save();cloudSave();draw()}
  if(d.pg)pomoForm();
+ if(d.nt)notifForm();
  if(d.cm){cm=Math.min(0,cm+ +d.cm);draw()}
  if(d.ex)examForm();
  if(d.fx==="1"&&S.run){S.run.fx=true;save();draw()}
@@ -273,7 +283,7 @@ const code=()=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let r="";for(let i=0;
 function toast(t){const o=document.createElement("div");o.className="toast";o.textContent=t;document.body.appendChild(o);setTimeout(()=>o.remove(),2600)}
 function listen(){if(unsub)unsub();unsub=null;if(!db||!S.gid)return;
  unsub=db.collection("groups/"+S.gid+"/members").onSnapshot(q=>{mem={};q.forEach(d=>mem[d.id]=d.data());const me=mem[uid];
-  if(me){if(S.seen===undefined){S.seen=Date.now();save()}else if((me.lastAt||0)>S.seen&&!(S.run&&S.run.fx)){S.seen=me.lastAt;save();toast((me.lastFrom||"だれか")+"さんから応援が届いたよ👏")}}
+  if(me){if(S.seen===undefined){S.seen=Date.now();save()}else if((me.lastAt||0)>S.seen&&!(S.run&&S.run.fx)){S.seen=me.lastAt;save();toast((me.lastFrom||"だれか")+"さんから応援が届いたよ👏");ntf("cheer","応援が届きました👏",(me.lastFrom||"だれか")+"さんから")}}
   if(tab=="m")draw()},e=>{fbErr=e.message;if(tab=="m")draw()})}
 function sync(x){if(!db||!S.gid||!uid)return;
  const t=today(),tot=Object.values(S.days).reduce((a,r)=>a+r.sec,0);
@@ -327,11 +337,28 @@ function pomoForm(){const q=P(),o=document.createElement("div");o.className="ov"
  o.onclick=e=>{const v=e.target.dataset&&e.target.dataset.v;if(v){const a=v.split(",");g(".pw").value=a[0];g(".ps").value=a[1];g(".pl").value=a[2];g(".pc").value=a[3]}};
  g(".pcx").onclick=()=>o.remove();
  g(".pok").onclick=()=>{S.pomo={w:n(".pw",1,180,25),sb:n(".ps",1,60,5),lb:n(".pl",1,120,15),lc:n(".pc",2,10,4)};save();cloudSave();o.remove();draw()}}
+const NT=()=>Object.assign({on:false,pm:true,ch:true,cheer:true,post:true},S.nt||{});
+function ntf(k,t,b){const q=NT();if(!q.on||!q[k]||!("Notification" in window)||Notification.permission!=="granted"||document.hasFocus())return;
+ try{const n=new Notification(t,{body:b,tag:"si-"+k});n.onclick=()=>{window.focus();n.close()}}catch(e){}}
+function notifForm(){const q=NT(),sup="Notification" in window,o=document.createElement("div");o.className="ov";
+ o.innerHTML='<div class="card"><h2 style="margin-top:0">デスクトップ通知</h2><p class="sub">アプリのタブを開いたままにしている間、別のタブや別のアプリを見ていても、通知でお知らせします。</p>'+(sup?'':'<p class="sub" style="color:#d9534f">このブラウザは通知に対応していません。</p>')+'<label class="sub"><input type="checkbox" class="c-on"> 通知を使う</label><label class="sub"><input type="checkbox" class="c-pm"> ポモドーロの作業・休憩の切り替え</label><label class="sub"><input type="checkbox" class="c-ch"> 30分ごとのチャイム(ストップウォッチ)</label><label class="sub"><input type="checkbox" class="c-cheer"> 応援が届いたとき</label><label class="sub"><input type="checkbox" class="c-post"> 掲示板の新しい投稿</label><p class="sub nm"></p><button class="sm nok">保存</button> <button class="lnk ntt">テスト通知</button> <button class="lnk ncx">閉じる</button></div>';
+ document.body.appendChild(o);const g=a=>o.querySelector(a);
+ g(".c-on").checked=q.on;g(".c-pm").checked=q.pm;g(".c-ch").checked=q.ch;g(".c-cheer").checked=q.cheer;g(".c-post").checked=q.post;
+ g(".ncx").onclick=()=>o.remove();
+ g(".nok").onclick=async()=>{const on=g(".c-on").checked;
+  if(on&&sup&&Notification.permission==="default"){try{await Notification.requestPermission()}catch(e){}}
+  S.nt={on:on&&sup,pm:g(".c-pm").checked,ch:g(".c-ch").checked,cheer:g(".c-cheer").checked,post:g(".c-post").checked};save();cloudSave();
+  if(on&&(!sup||Notification.permission!=="granted")){g(".nm").textContent="ブラウザで通知が許可されていません。アドレスバー左の鍵(設定)アイコンから、通知を「許可」にしてください。";return}
+  o.remove();draw()};
+ g(".ntt").onclick=async()=>{if(!sup)return g(".nm").textContent="この端末は通知に対応していません";
+  if(Notification.permission==="default")await Notification.requestPermission();
+  if(Notification.permission!=="granted")return g(".nm").textContent="通知が許可されていません。ブラウザの設定で「許可」にしてください";
+  try{new Notification("テスト通知",{body:"通知が届いています🔔"});g(".nm").textContent="送りました。画面の隅に出ましたか?"}catch(e){g(".nm").textContent="この端末(スマホなど)では、ページからの通知は使えないようです"}}}
 function pauseToggle(){if(!S.run)return;
  if(S.run.paused){if(S.run.pm)S.run.pst+=Date.now()-S.run.paused;S.run.t0=Date.now();S.run.lt=Date.now();S.run.paused=null;lastHb=Date.now();wlock()}
  else{const sec=el();if(sec>=1)commit(sec);S.run.paused=Date.now();wrel()}
  save();cloudSave();sync();draw()}
-let replyTo=null,pend=null;const imgC={},pc=new Map();let pmore=false,pTouched=false,pbusy=false;
+let replyTo=null,pend=null;const imgC={},pc=new Map();let pmore=false,pTouched=false,pbusy=false,pReady=false;
 const pReset=()=>{pc.clear();posts=[];pmore=false;pTouched=false};
 async function moreP(){if(pbusy||!pmore||!db||!S.gid)return;const last=posts[posts.length-1];if(!last)return;pbusy=true;pTouched=true;
  try{const q=await db.collection("groups/"+S.gid+"/posts").orderBy("at","desc").startAfter(last.at).limit(30).get();
@@ -365,9 +392,9 @@ function postList(){if(!posts.length)return'<p class="sub">まだ投稿があり
   +'<div style="white-space:pre-wrap;word-break:break-word">'+esc(p.text)+'</div>'+thImg(p)+'</div><button class="lnk" data-rp="'+esc(p.id)+'">↩</button>'+(p.uid==uid?'<button class="lnk" data-dp="'+esc(p.id)+'">✕</button>':'')+'</div>').join("")+(pmore?'<button class="chip" data-mp="1" style="display:block;margin:10px auto 0">さらに古い投稿を読み込む</button>':'')}
 function brd(){if(!OKB||!S.gid)return'<div class="card"><h2 style="margin-top:0">掲示板</h2><p class="sub">「みんな」タブでグループに参加すると使えます。</p></div>';
  return'<div class="card"><h2 style="margin-top:0">みんなの掲示板 <span class="sub">グループ '+esc(S.gid)+'</span></h2>'+rqBar()+'<textarea id="pt" maxlength="140" rows="3" placeholder="今日やったことを報告しよう(140字まで)">'+esc(draftP)+'</textarea>'+(pend?'<div class="rq"><img class="pv" src="'+pend.th+'" alt=""><span>画像を添付中</span><button class="lnk" data-px="1">✕</button></div>':'')+'<div style="display:flex;gap:8px;align-items:center"><button class="chip" data-pi="1">今日の勉強を入れる</button><button class="chip" data-pm="1">🖼 画像</button><input type="file" id="pf" accept="image/*" hidden><span style="flex:1"></span><button class="sm" style="margin:0" data-pp="1">投稿</button></div>'+err()+'</div><div class="card" id="pl">'+postList()+'</div>'}
-function postsOn(){if(unsubP||!db||!S.gid)return;unsubP=db.collection("groups/"+S.gid+"/posts").orderBy("at","desc").limit(30).onSnapshot(q=>{const lastAt=q.size?q.docs[q.docs.length-1].data().at:0;
-  q.docChanges().forEach(c=>{const dt=c.doc.data();if(c.type=="removed"){if(!(q.size>=30&&dt.at<lastAt))pc.delete(c.doc.id)}else pc.set(c.doc.id,Object.assign({id:c.doc.id},dt))});
-  if(!pTouched)pmore=q.size>=30;posts=[...pc.values()].sort((a,b)=>b.at-a.at);if(S.lastRead===undefined){S.lastRead=Date.now();save()}const l=$("#pl");if(tab=="b"){if(l)l.innerHTML=postList();S.lastRead=Date.now();save()}updBadge()},e=>{fbErr=e.message})}
+function postsOn(){if(unsubP||!db||!S.gid)return;pReady=false;unsubP=db.collection("groups/"+S.gid+"/posts").orderBy("at","desc").limit(30).onSnapshot(q=>{const fresh=[];const lastAt=q.size?q.docs[q.docs.length-1].data().at:0;
+  q.docChanges().forEach(c=>{const dt=c.doc.data();if(c.type=="removed"){if(!(q.size>=30&&dt.at<lastAt))pc.delete(c.doc.id)}else{pc.set(c.doc.id,Object.assign({id:c.doc.id},dt));if(c.type=="added"&&pReady&&dt.uid!=uid&&dt.at>(S.lastRead||0))fresh.push(dt)}});
+  if(!pTouched)pmore=q.size>=30;posts=[...pc.values()].sort((a,b)=>b.at-a.at);if(fresh.length)ntf("post",(fresh[0].nick||"だれか")+"さんが投稿しました"+(fresh.length>1?"(ほか"+(fresh.length-1)+"件)":""),(fresh[0].text||"画像を送りました").slice(0,60));pReady=true;if(S.lastRead===undefined){S.lastRead=Date.now();save()}const l=$("#pl");if(tab=="b"){if(l)l.innerHTML=postList();S.lastRead=Date.now();save()}updBadge()},e=>{fbErr=e.message})}
 function postsOff(){if(unsubP){unsubP();unsubP=null}}
 $("#v").addEventListener("input",e=>{if(e.target.id=="pt")draftP=e.target.value});
 function fxDraw(){let o=$("#fx");if(!(S.run&&S.run.fx)){if(o)o.remove();return}
@@ -403,5 +430,6 @@ if(OKB)fbInit().then(async o=>{if(o){await cloudPull();if(S.gid){await sync();li
 
 function clock(){const d=new Date(),t=pad(d.getHours())+":"+pad(d.getMinutes());document.querySelectorAll(".clk").forEach(e=>{if(e.textContent!=t)e.textContent=t})}
 clock();setInterval(clock,1000);
+try{const wk=new Worker(URL.createObjectURL(new Blob(["setInterval(()=>postMessage(0),1000)"])));wk.onmessage=()=>{if(document.hidden&&S.run)tick()}}catch(e){}
 draw();
 </script></body></html>
