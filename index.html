@@ -203,6 +203,7 @@ function rec(){const dn=["日","月","火","水","木","金","土"],cols=[];let 
 function set(){const q=P(),row=(d,l,v,x)=>'<button class="srow" data-'+d+'="1"'+(x||"")+'>'+l+(v!==undefined?'<span>'+v+' ›</span>':'')+'</button>';
  return '<div class="card"><h2 style="margin-top:0">1日の目標</h2><div class="chips" style="justify-content:flex-start;margin:6px 0 0">'+[15,30,60,90,120].map(g=>'<button class="chip'+(g==S.goal?" on":"")+'" data-g="'+g+'">'+g+'分</button>').join("")+'<button class="chip'+(GL.includes(S.goal)?"":" on")+'" data-gc="1">'+(GL.includes(S.goal)?"自由入力":S.goal+"分")+'</button></div></div>'
  +'<div class="card"><h2 style="margin-top:0">タイマー</h2>'+row("pg","ポモドーロの設定",q.w+"分 / 休憩"+q.sb+"分")+row("wl","画面を消さない(勉強中)",S.wl===false?"オフ":"オン")+row("fs","集中画面(勉強中)",S.fxoff?"オフ":"オン")+'</div>'
+ +'<div class="card"><h2 style="margin-top:0">科目</h2>'+S.subj.map((n,i)=>'<div class="srow"><span style="color:var(--ink);font-size:15px;text-align:left">'+esc(n)+'</span><button class="lnk" data-sd="'+i+'">✕ 消す</button></div>').join("")+'<button class="srow" style="border-top:1px solid var(--ln)" data-add="1">＋ 科目を追加</button></div>'
  +'<div class="card"><h2 style="margin-top:0">お知らせ・予定</h2>'+row("nt","デスクトップ通知",S.nt&&S.nt.on?"オン":"オフ")+row("ex","試験日",S.exam&&S.exam.date?esc(S.exam.name||"試験")+" "+S.exam.date:"未設定")+'</div>'
  +tcal()+acc()+'<div class="card">'+row("reset","データを消す",undefined,' style="color:#d9534f"')+'</div>'}
 function draw(){const s=streak();$("#st").textContent="🔥 "+s+"日";
@@ -260,6 +261,7 @@ $("#v").onclick=e=>{const bt=e.target.closest&&e.target.closest("button")||e.tar
  if(d.ps)pauseToggle();
  if(d.md){S.mode=d.md;save();cloudSave();draw()}
  if(d.pg)pomoForm();
+ if(d.sd!==undefined)delSubj(+d.sd);
  if(d.td)todoForm(d.td);
  if(d.tm){tcm=Math.max(-2,Math.min(12,tcm+ +d.tm));draw()}
  if(d.nt)notifForm();
@@ -374,6 +376,8 @@ function tcal(){const n=new Date(),f=new Date(n.getFullYear(),n.getMonth()+tcm,1
  let c=["日","月","火","水","木","金","土"].map(x=>"<span>"+x+"</span>").join("");for(let i=0;i<f.getDay();i++)c+='<i class="e"></i>';
  for(let d=1;d<=nd;d++){const k=Y+"-"+pad(M+1)+"-"+pad(d),a=tdOf(k),dn=a.filter(x=>x.d).length;c+='<i data-td="'+k+'" class="'+(k==key()?"td ":"")+(a.length&&dn==a.length?"ok":"")+'">'+d+(a.length?"<em>"+dn+"/"+a.length+"</em>":"")+"</i>"}
  return'<div class="card"><div style="display:flex;align-items:center;justify-content:space-between"><button class="chip" data-tm="-1">‹</button><h2 style="margin:0">'+Y+"年"+(M+1)+'月 のやること</h2><button class="chip" data-tm="1">›</button></div><div class="cal tcal">'+c+'</div><p class="sub">日付をタップすると、その日のやることを決められます。数字は「完了/全部」です。</p></div>'}
+function delSubj(i){const n=S.subj[i];if(n===undefined)return;if(S.run)return toast("勉強中は科目を消せません");if(S.subj.length<=1)return toast("科目は1つ以上必要です");
+ if(!confirm("「"+n+"」を消しますか?\n(これまでの記録は残ります)"))return;S.subj.splice(i,1);if(S.cur>i)S.cur--;if(S.cur>=S.subj.length)S.cur=S.subj.length-1;save();cloudSave();draw()}
 function todoCard(){const a=tdOf(key()),n=a.length,dn=a.filter(x=>x.d).length,rows=a.map((x,i)=>[x,i]).sort((p,q)=>(p[0].d?1:0)-(q[0].d?1:0)||p[1]-q[1]);let first=true;
  return'<div class="card fl todo"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><h2 style="margin:0;font-size:16px">📝 今日やること'+(n?' <span class="sub">'+dn+'/'+n+'</span>':'')+'</h2><button class="chip" data-td="'+key()+'">'+(n?"編集":"＋ 追加")+'</button></div>'
  +(n?'<div class="tlist">'+rows.map(r=>{const x=r[0],cur=!x.d&&first;if(cur)first=false;return'<label class="tk'+(x.d?" dn":"")+(cur?" cur":"")+'"><input type="checkbox" data-ti="'+r[1]+'"'+(x.d?" checked":"")+'><span>'+esc(x.t)+'</span></label>'}).join("")+'</div>':'<p class="sub" style="margin:6px 0 0">やることを決めると、ここに表示されます。</p>')+'</div>'}
