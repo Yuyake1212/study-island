@@ -116,6 +116,11 @@ button,nav,.ring,.seg,.chips,.go,.cal,.wk,.isl,.hero,#fx{-webkit-user-select:non
 .srow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:13px 2px;border:0;border-top:1px solid var(--ln);background:none;color:var(--ink);font:inherit;font-size:15px;text-align:left}
 .srow:first-of-type{border-top:0}.srow span{color:var(--sub);font-size:14px;text-align:right}
 @media(max-width:400px){nav{padding-left:4px;padding-right:4px}nav button{font-size:10px}nav button b{font-size:18px}}
+.pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:0 0 12px}.pills .pill{margin:0}
+.ti{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--ln);text-align:left}
+.ov .ti label{display:flex;flex:1;gap:8px;align-items:center;margin:0;color:var(--ink)}.ti .dn{text-decoration:line-through;color:var(--sub)}
+.tl{max-height:40vh;overflow:auto;margin-bottom:8px}.ov .tdc{max-width:min(94vw,420px)}
+.tcal i{flex-direction:column;background:var(--bg);line-height:1.15}.tcal i em{font-style:normal;font-size:9px;color:var(--sub);pointer-events:none}.tcal i.ok{box-shadow:inset 0 0 0 2px var(--sea)}
 </style></head><body><main>
 <div class="top"><h1>🏝️ 勉強アイランド</h1><div style="display:flex;align-items:center;gap:10px"><span class="clk"></span><div class="badge" id="st"></div></div></div>
 <div id="v"></div></main>
@@ -135,7 +140,7 @@ const PE=["🌊","🏝️","🌴","🏡","🏘️","⛵","🚢","🏰","🌉","�
 let S={goal:30,subj:["英語","数学","国語","その他"],cur:0,days:{},items:[],rem:0,run:null},tab="h",tk=null;
 try{Object.assign(S,JSON.parse(localStorage.getItem(KEY))||{})}catch(e){}
 if(S.run){S.run.acc=S.run.acc||0;S.run.got=S.run.got||[];S.run.ch=Math.floor((S.run.acc+(S.run.paused?0:(Date.now()-S.run.t0)/1000))/1800)}
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const save=()=>{tdPrune();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const pad=n=>String(n).padStart(2,"0"),key=d=>{d=d||new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const today=()=>S.days[key()]||{sec:0,goal:S.goal,by:{}};
@@ -175,7 +180,7 @@ function tick(){if(S.run&&!S.run.paused){const n=Date.now(),g=(n-(S.run.lt||n))/
  if(S.run&&!S.run.paused){const c=Math.floor((S.run.acc+e)/1800);if(!S.run.pm&&c>(S.run.ch||0)){S.run.ch=c;chime();toast("🔔 "+c*30+"分たちました");ntf("ch","30分たちました","勉強を始めてから "+c*30+"分です🔔")}if(e>=300){flush();e=el();t=today().sec+e}}
  const d=dispT(e,t);fxUpd(d);const a=$("#tm");if(!a)return;a.textContent=d.tm;const rg=$("#rg");rg.style.strokeDashoffset=CIRC*(1-d.pr);rg.style.stroke=d.brk?"var(--sea)":"url(#rg2)";$("#td").textContent=d.lab}
 function home(){const run=!!S.run;
- return examPill()+'<div class="card">'+seg(run)+'<div class="ring"><svg viewBox="0 0 120 120"><defs><linearGradient id="rg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sun)"/><stop offset="1" style="stop-color:#ff8a5b"/></linearGradient></defs><circle cx="60" cy="60" r="52" fill="none" stroke="var(--ln)" stroke-width="9"/><circle id="rg" cx="60" cy="60" r="52" fill="none" stroke="url(#rg2)" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+CIRC+'" stroke-dashoffset="'+CIRC+'"/></svg><div class="c"><div id="tm">00:00</div><div class="sub" id="td"></div></div></div>'
+ return pills()+'<div class="card">'+seg(run)+'<div class="ring"><svg viewBox="0 0 120 120"><defs><linearGradient id="rg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sun)"/><stop offset="1" style="stop-color:#ff8a5b"/></linearGradient></defs><circle cx="60" cy="60" r="52" fill="none" stroke="var(--ln)" stroke-width="9"/><circle id="rg" cx="60" cy="60" r="52" fill="none" stroke="url(#rg2)" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+CIRC+'" stroke-dashoffset="'+CIRC+'"/></svg><div class="c"><div id="tm">00:00</div><div class="sub" id="td"></div></div></div>'
  +'<div class="chips">'+S.subj.map((s,i)=>'<button class="chip'+(i==S.cur?" on":"")+'" data-s="'+i+'"'+(run?" disabled":"")+'>'+esc(s)+'</button>').join("")+(run?"":'<button class="chip" data-add="1">＋</button>')+'</div>'
  +(run?'<button class="go" data-ps="1">'+(S.run.paused?"▶ 再開":"⏸ 一時停止")+'</button><div style="height:10px"></div>':'')+'<button class="go'+(run?" stop":"")+'" id="go">'+(run?"おわる":"はじめる")+'</button>'+(run?'<button class="lnk" data-fx="1">集中画面にする</button>':'')+'</div>'
  }
@@ -195,7 +200,7 @@ function set(){const q=P(),row=(d,l,v,x)=>'<button class="srow" data-'+d+'="1"'+
  return '<div class="card"><h2 style="margin-top:0">1日の目標</h2><div class="chips" style="justify-content:flex-start;margin:6px 0 0">'+[15,30,60,90,120].map(g=>'<button class="chip'+(g==S.goal?" on":"")+'" data-g="'+g+'">'+g+'分</button>').join("")+'<button class="chip'+(GL.includes(S.goal)?"":" on")+'" data-gc="1">'+(GL.includes(S.goal)?"自由入力":S.goal+"分")+'</button></div></div>'
  +'<div class="card"><h2 style="margin-top:0">タイマー</h2>'+row("pg","ポモドーロの設定",q.w+"分 / 休憩"+q.sb+"分")+row("wl","画面を消さない(勉強中)",S.wl===false?"オフ":"オン")+row("fs","集中画面(勉強中)",S.fxoff?"オフ":"オン")+'</div>'
  +'<div class="card"><h2 style="margin-top:0">お知らせ・予定</h2>'+row("nt","デスクトップ通知",S.nt&&S.nt.on?"オン":"オフ")+row("ex","試験日",S.exam&&S.exam.date?esc(S.exam.name||"試験")+" "+S.exam.date:"未設定")+'</div>'
- +acc()+'<div class="card">'+row("reset","データを消す",undefined,' style="color:#d9534f"')+'</div>'}
+ +tcal()+acc()+'<div class="card">'+row("reset","データを消す",undefined,' style="color:#d9534f"')+'</div>'}
 function draw(){const s=streak();$("#st").textContent="🔥 "+s+"日";
  $("#v").innerHTML=tab=="h"?home():tab=="i"?isl():tab=="m"?(lastSoc=soc()):tab=="b"?brd():tab=="s"?set():rec();
  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t==tab));
@@ -232,11 +237,11 @@ function cal(){const n=new Date(),f=new Date(n.getFullYear(),n.getMonth()+cm,1),
 const showCal=e=>{const c=e.target.closest&&e.target.closest("[data-ck]"),b=$("#dc");if(!c||!b)return;b.innerHTML=dayInfo(c.dataset.ck);document.querySelectorAll(".cal i").forEach(x=>x.classList.toggle("sel",x===c))};
 ["mouseover","click","focusin"].forEach(t=>$("#v").addEventListener(t,showCal));
 function dayInfo(k){const r=S.days[k],dn=["日","月","火","水","木","金","土"],d=new Date(k.replace(/-/g,"/")),f=x=>x>=60?Math.floor(x/60)+"時間"+(x%60?x%60+"分":""):x+"分",m=Math.floor((r?r.sec:0)/60),by=r?Object.entries(r.by||{}).sort((a,b)=>b[1]-a[1]).map(x=>esc(x[0])+" "+f(Math.floor(x[1]/60))):[];
- return "<b>"+(d.getMonth()+1)+"/"+d.getDate()+"("+dn[d.getDay()]+")</b> 勉強 "+f(m)+(r?" / 目標 "+f(r.goal)+"(達成率 "+Math.round(r.sec/(r.goal*60)*100)+"%"+(ok(k)?" ✅":"")+")":"")+(by.length?"<br>科目別:"+by.join(" ・ "):"")}
+ return "<b>"+(d.getMonth()+1)+"/"+d.getDate()+"("+dn[d.getDay()]+")</b> 勉強 "+f(m)+(r?" / 目標 "+f(r.goal)+"(達成率 "+Math.round(r.sec/(r.goal*60)*100)+"%"+(ok(k)?" ✅":"")+")":"")+(by.length?"<br>科目別:"+by.join(" ・ "):"")+(tdOf(k).length?"<br>やること "+tdOf(k).filter(x=>x.d).length+"/"+tdOf(k).length+" 完了":"")}
 const showDay=e=>{const c=e.target.closest&&e.target.closest("[data-k]"),b=$("#dt");if(!c||!b)return;b.innerHTML=dayInfo(c.dataset.k);document.querySelectorAll(".wk div").forEach(x=>x.classList.toggle("sel",x===c))};
 ["mouseover","click","focusin"].forEach(t=>$("#v").addEventListener(t,showDay));
 $("#nav").onclick=e=>{const c=e.target.closest("[data-t]");if(c){tab=c.dataset.t;draw()}};
-$("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
+$("#v").onclick=e=>{const bt=e.target.closest&&e.target.closest("button")||e.target,d=bt.dataset;if(!d)return;
  if(e.target.id=="go")return S.run?stop():start();
  if(d.s!==undefined){S.cur=+d.s;save();draw()}
  if(d.add){const n=(prompt("科目の名前")||"").trim().slice(0,10);if(n){S.subj.push(n);S.cur=S.subj.length-1;save();cloudSave();draw()}}
@@ -251,6 +256,8 @@ $("#v").onclick=e=>{const d=e.target.dataset;if(!d)return;
  if(d.ps)pauseToggle();
  if(d.md){S.mode=d.md;save();cloudSave();draw()}
  if(d.pg)pomoForm();
+ if(d.td)todoForm(d.td);
+ if(d.tm){tcm=Math.max(-2,Math.min(12,tcm+ +d.tm));draw()}
  if(d.nt)notifForm();
  if(d.cm){cm=Math.min(0,cm+ +d.cm);draw()}
  if(d.ex)examForm();
@@ -354,6 +361,25 @@ function notifForm(){const q=NT(),sup="Notification" in window,o=document.create
   if(Notification.permission==="default")await Notification.requestPermission();
   if(Notification.permission!=="granted")return g(".nm").textContent="通知が許可されていません。ブラウザの設定で「許可」にしてください";
   try{new Notification("テスト通知",{body:"通知が届いています🔔"});g(".nm").textContent="送りました。画面の隅に出ましたか?"}catch(e){g(".nm").textContent="この端末(スマホなど)では、ページからの通知は使えないようです"}}}
+let tcm=0;
+const tdOf=k=>(S.todos&&S.todos[k])||[];
+function tdPrune(){const t=S.todos;if(!t)return;const l=new Date();l.setDate(l.getDate()-120);const L=key(l);Object.keys(t).forEach(k=>{if(k<L||!t[k].length)delete t[k]})}
+function todoPill(){const a=tdOf(key()),n=a.length;return'<button class="pill" data-td="'+key()+'">📝 '+(n?"今日やること <b>"+a.filter(x=>x.d).length+"/"+n+"</b>":"今日やることを決める")+'</button>'}
+const pills=()=>'<div class="pills">'+examPill()+todoPill()+'</div>';
+function tcal(){const n=new Date(),f=new Date(n.getFullYear(),n.getMonth()+tcm,1),Y=f.getFullYear(),M=f.getMonth(),nd=new Date(Y,M+1,0).getDate();
+ let c=["日","月","火","水","木","金","土"].map(x=>"<span>"+x+"</span>").join("");for(let i=0;i<f.getDay();i++)c+='<i class="e"></i>';
+ for(let d=1;d<=nd;d++){const k=Y+"-"+pad(M+1)+"-"+pad(d),a=tdOf(k),dn=a.filter(x=>x.d).length;c+='<i data-td="'+k+'" class="'+(k==key()?"td ":"")+(a.length&&dn==a.length?"ok":"")+'">'+d+(a.length?"<em>"+dn+"/"+a.length+"</em>":"")+"</i>"}
+ return'<div class="card"><div style="display:flex;align-items:center;justify-content:space-between"><button class="chip" data-tm="-1">‹</button><h2 style="margin:0">'+Y+"年"+(M+1)+'月 のやること</h2><button class="chip" data-tm="1">›</button></div><div class="cal tcal">'+c+'</div><p class="sub">日付をタップすると、その日のやることを決められます。数字は「完了/全部」です。</p></div>'}
+function todoForm(k){const o=document.createElement("div");o.className="ov";
+ const dn=["日","月","火","水","木","金","土"],dt=new Date(k.replace(/-/g,"/")),ttl=(dt.getMonth()+1)+"/"+dt.getDate()+"("+dn[dt.getDay()]+")"+(k==key()?" 今日":"");
+ o.innerHTML='<div class="card tdc"><h2 style="margin:0 0 4px">'+ttl+' のやること</h2><p class="sub tc" style="margin:0 0 8px"></p><div class="tl"></div><div style="display:flex;gap:6px;align-items:center"><input class="tn" maxlength="40" placeholder="やることを入力(40字まで)"><button class="sm tad" style="margin:6px 0;white-space:nowrap">追加</button></div><button class="lnk tcl">閉じる</button></div>';
+ document.body.appendChild(o);const q=a=>o.querySelector(a),list=()=>{S.todos=S.todos||{};return S.todos[k]=S.todos[k]||[]};
+ const paint=()=>{const a=tdOf(k);q(".tl").innerHTML=a.length?a.map((x,i)=>'<div class="ti"><label><input type="checkbox" data-i="'+i+'"'+(x.d?" checked":"")+'><span class="'+(x.d?"dn":"")+'">'+esc(x.t)+'</span></label><button class="lnk" data-x="'+i+'">✕</button></div>').join(""):'<p class="sub">まだありません。下から追加しよう。</p>';q(".tc").textContent=a.length?a.filter(x=>x.d).length+" / "+a.length+" 完了":"やることを書き出してみよう"};
+ const done=()=>{save();cloudSave()},close=()=>{o.remove();draw()},add=()=>{const v=q(".tn").value.trim().slice(0,40);if(!v)return;if(list().length>=20)return toast("1日20個までです");list().push({t:v,d:false});q(".tn").value="";done();paint();q(".tn").focus()};
+ paint();
+ o.onclick=e=>{if(e.target===o)return close();if(e.target.closest(".tcl"))return close();if(e.target.closest(".tad"))return add();const x=e.target.dataset&&e.target.dataset.x;if(x!==undefined){list().splice(+x,1);done();paint()}};
+ o.onchange=e=>{const i=e.target.dataset&&e.target.dataset.i;if(i===undefined)return;list()[+i].d=e.target.checked;done();paint();const a=tdOf(k);if(e.target.checked&&a.length&&a.every(x=>x.d)&&k==key())toast("🎉 今日のやること、ぜんぶできた!")};
+ q(".tn").addEventListener("keydown",e=>{if(e.key=="Enter"){e.preventDefault();add()}})}
 function pauseToggle(){if(!S.run)return;
  if(S.run.paused){if(S.run.pm)S.run.pst+=Date.now()-S.run.paused;S.run.t0=Date.now();S.run.lt=Date.now();S.run.paused=null;lastHb=Date.now();wlock()}
  else{const sec=el();if(sec>=1)commit(sec);S.run.paused=Date.now();wrel()}
