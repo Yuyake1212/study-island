@@ -121,6 +121,10 @@ button,nav,.ring,.seg,.chips,.go,.cal,.wk,.isl,.hero,#fx{-webkit-user-select:non
 .ov .ti label{display:flex;flex:1;gap:8px;align-items:center;margin:0;color:var(--ink)}.ti .dn{text-decoration:line-through;color:var(--sub)}
 .tl{max-height:40vh;overflow:auto;margin-bottom:8px}.ov .tdc{max-width:min(94vw,420px)}
 .tcal i{flex-direction:column;background:var(--bg);line-height:1.15}.tcal i em{font-style:normal;font-size:9px;color:var(--sub);pointer-events:none}.tcal i.ok{box-shadow:inset 0 0 0 2px var(--sea)}
+.tlist{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.tk{display:flex;align-items:center;gap:10px;padding:7px 2px;border-top:1px solid var(--ln);font-size:15px;margin:0;cursor:pointer}.tk:first-child{border-top:0}
+.tk input{width:20px;height:20px;accent-color:var(--sea);flex:none}.tk.dn span{text-decoration:line-through;color:var(--sub)}.tk.cur span{font-weight:700}
+body.ns #v>.card.todo{min-height:92px}#fx .fxk{font-size:15px;max-width:80%;margin-top:-6px}
 </style></head><body><main>
 <div class="top"><h1>🏝️ 勉強アイランド</h1><div style="display:flex;align-items:center;gap:10px"><span class="clk"></span><div class="badge" id="st"></div></div></div>
 <div id="v"></div></main>
@@ -182,7 +186,7 @@ function tick(){if(S.run&&!S.run.paused){const n=Date.now(),g=(n-(S.run.lt||n))/
 function home(){const run=!!S.run;
  return pills()+'<div class="card">'+seg(run)+'<div class="ring"><svg viewBox="0 0 120 120"><defs><linearGradient id="rg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--sun)"/><stop offset="1" style="stop-color:#ff8a5b"/></linearGradient></defs><circle cx="60" cy="60" r="52" fill="none" stroke="var(--ln)" stroke-width="9"/><circle id="rg" cx="60" cy="60" r="52" fill="none" stroke="url(#rg2)" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+CIRC+'" stroke-dashoffset="'+CIRC+'"/></svg><div class="c"><div id="tm">00:00</div><div class="sub" id="td"></div></div></div>'
  +'<div class="chips">'+S.subj.map((s,i)=>'<button class="chip'+(i==S.cur?" on":"")+'" data-s="'+i+'"'+(run?" disabled":"")+'>'+esc(s)+'</button>').join("")+(run?"":'<button class="chip" data-add="1">＋</button>')+'</div>'
- +(run?'<button class="go" data-ps="1">'+(S.run.paused?"▶ 再開":"⏸ 一時停止")+'</button><div style="height:10px"></div>':'')+'<button class="go'+(run?" stop":"")+'" id="go">'+(run?"おわる":"はじめる")+'</button>'+(run?'<button class="lnk" data-fx="1">集中画面にする</button>':'')+'</div>'
+ +(run?'<button class="go" data-ps="1">'+(S.run.paused?"▶ 再開":"⏸ 一時停止")+'</button><div style="height:10px"></div>':'')+'<button class="go'+(run?" stop":"")+'" id="go">'+(run?"おわる":"はじめる")+'</button>'+(run?'<button class="lnk" data-fx="1">集中画面にする</button>':'')+'</div>'+todoCard()
  }
 function islV(){const p=S.rem+el(),tot=(Object.values(S.days).reduce((a,r)=>a+r.sec,0)+el())/3600,v=lvOf(tot,LP),nx=LP[v+1];
  return{e:PE[v],t:"Lv."+(v+1)+" "+PT[v],s:nx?"次の進化「"+PT[v+1]+"」まで あと"+Math.max(0.1,Math.round((nx-tot)*10)/10)+"時間":"最終形態に到達!",pc:nx?(tot-LP[v])/(nx-LP[v])*100:100,nx:"次の仲間まで あと"+Math.max(1,Math.ceil((600-p%600)/60))+"分",pb:p%600/6}}
@@ -365,11 +369,15 @@ let tcm=0;
 const tdOf=k=>(S.todos&&S.todos[k])||[];
 function tdPrune(){const t=S.todos;if(!t)return;const l=new Date();l.setDate(l.getDate()-120);const L=key(l);Object.keys(t).forEach(k=>{if(k<L||!t[k].length)delete t[k]})}
 function todoPill(){const a=tdOf(key()),n=a.length;return'<button class="pill" data-td="'+key()+'">📝 '+(n?"今日やること <b>"+a.filter(x=>x.d).length+"/"+n+"</b>":"今日やることを決める")+'</button>'}
-const pills=()=>'<div class="pills">'+examPill()+todoPill()+'</div>';
+const pills=()=>examPill()?'<div class="pills">'+examPill()+'</div>':"";
 function tcal(){const n=new Date(),f=new Date(n.getFullYear(),n.getMonth()+tcm,1),Y=f.getFullYear(),M=f.getMonth(),nd=new Date(Y,M+1,0).getDate();
  let c=["日","月","火","水","木","金","土"].map(x=>"<span>"+x+"</span>").join("");for(let i=0;i<f.getDay();i++)c+='<i class="e"></i>';
  for(let d=1;d<=nd;d++){const k=Y+"-"+pad(M+1)+"-"+pad(d),a=tdOf(k),dn=a.filter(x=>x.d).length;c+='<i data-td="'+k+'" class="'+(k==key()?"td ":"")+(a.length&&dn==a.length?"ok":"")+'">'+d+(a.length?"<em>"+dn+"/"+a.length+"</em>":"")+"</i>"}
  return'<div class="card"><div style="display:flex;align-items:center;justify-content:space-between"><button class="chip" data-tm="-1">‹</button><h2 style="margin:0">'+Y+"年"+(M+1)+'月 のやること</h2><button class="chip" data-tm="1">›</button></div><div class="cal tcal">'+c+'</div><p class="sub">日付をタップすると、その日のやることを決められます。数字は「完了/全部」です。</p></div>'}
+function todoCard(){const a=tdOf(key()),n=a.length,dn=a.filter(x=>x.d).length,rows=a.map((x,i)=>[x,i]).sort((p,q)=>(p[0].d?1:0)-(q[0].d?1:0)||p[1]-q[1]);let first=true;
+ return'<div class="card fl todo"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><h2 style="margin:0;font-size:16px">📝 今日やること'+(n?' <span class="sub">'+dn+'/'+n+'</span>':'')+'</h2><button class="chip" data-td="'+key()+'">'+(n?"編集":"＋ 追加")+'</button></div>'
+ +(n?'<div class="tlist">'+rows.map(r=>{const x=r[0],cur=!x.d&&first;if(cur)first=false;return'<label class="tk'+(x.d?" dn":"")+(cur?" cur":"")+'"><input type="checkbox" data-ti="'+r[1]+'"'+(x.d?" checked":"")+'><span>'+esc(x.t)+'</span></label>'}).join("")+'</div>':'<p class="sub" style="margin:6px 0 0">やることを決めると、ここに表示されます。</p>')+'</div>'}
+$("#v").addEventListener("change",e=>{const i=e.target.dataset&&e.target.dataset.ti;if(i===undefined)return;const a=tdOf(key());if(!a[+i])return;a[+i].d=e.target.checked;save();cloudSave();draw();if(e.target.checked&&a.every(x=>x.d))toast("🎉 今日のやること、ぜんぶできた!")});
 function todoForm(k){const o=document.createElement("div");o.className="ov";
  const dn=["日","月","火","水","木","金","土"],dt=new Date(k.replace(/-/g,"/")),ttl=(dt.getMonth()+1)+"/"+dt.getDate()+"("+dn[dt.getDay()]+")"+(k==key()?" 今日":"");
  o.innerHTML='<div class="card tdc"><h2 style="margin:0 0 4px">'+ttl+' のやること</h2><p class="sub tc" style="margin:0 0 8px"></p><div class="tl"></div><div style="display:flex;gap:6px;align-items:center"><input class="tn" maxlength="40" placeholder="やることを入力(40字まで)"><button class="sm tad" style="margin:6px 0;white-space:nowrap">追加</button></div><button class="lnk tcl">閉じる</button></div>';
@@ -424,9 +432,9 @@ function postsOn(){if(unsubP||!db||!S.gid)return;pReady=false;unsubP=db.collecti
 function postsOff(){if(unsubP){unsubP();unsubP=null}}
 $("#v").addEventListener("input",e=>{if(e.target.id=="pt")draftP=e.target.value});
 function fxDraw(){let o=$("#fx");if(!(S.run&&S.run.fx)){if(o)o.remove();return}
- if(!o){o=document.createElement("div");o.id="fx";o.innerHTML='<div class="clk"></div><div class="fxs"></div><div id="fxt" class="fxt">00:00</div><div class="fxbar"><i id="fxb"></i></div><div id="fxd" class="sub"></div><div class="fxbt"><button class="go" data-fp="1">⏸ 一時停止</button><button class="go stop" data-fe="1">おわる</button><button class="lnk" data-fq="1">もどる</button></div>';
+ if(!o){o=document.createElement("div");o.id="fx";o.innerHTML='<div class="clk"></div><div class="fxs"></div><div class="fxk sub"></div><div id="fxt" class="fxt">00:00</div><div class="fxbar"><i id="fxb"></i></div><div id="fxd" class="sub"></div><div class="fxbt"><button class="go" data-fp="1">⏸ 一時停止</button><button class="go stop" data-fe="1">おわる</button><button class="lnk" data-fq="1">もどる</button></div>';
   o.onclick=e=>{const d=e.target.dataset;if(d.fe)stop();if(d.fp)pauseToggle();if(d.fq){S.run.fx=false;save();draw()}};document.body.appendChild(o)}
- o.querySelector(".fxs").textContent=(S.subj[S.run.s]||"")+(S.run.paused?"・一時停止中":S.run.ph=="b"?"・休憩中☕":" に集中中");o.querySelector("[data-fp]").textContent=S.run.paused?"▶ 再開":"⏸ 一時停止";clock()}
+ o.querySelector(".fxs").textContent=(S.subj[S.run.s]||"")+(S.run.paused?"・一時停止中":S.run.ph=="b"?"・休憩中☕":" に集中中");o.querySelector("[data-fp]").textContent=S.run.paused?"▶ 再開":"⏸ 一時停止";{const u=tdOf(key()).find(x=>!x.d);o.querySelector(".fxk").textContent=u?"📝 "+u.t:""}clock()}
 function fxUpd(d){const f=$("#fxt");if(!f||!S.run)return;f.textContent=d.tm;$("#fxd").textContent=d.lab;$("#fxb").style.width=d.pr*100+"%"}
 const isAcct=()=>acct&&!acct.isAnonymous,EM2=id=>id+"@study-island.invalid";
 function cloudSave(){if(!db||!uid||!isAcct())return Promise.resolve();S.t=Date.now();const o=Object.assign({},S);delete o.run;save();return db.doc("users/"+uid).set({data:JSON.stringify(o),t:S.t}).catch(e=>{fbErr=e.message})}
