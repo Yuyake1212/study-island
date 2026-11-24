@@ -126,6 +126,10 @@ button,nav,.ring,.seg,.chips,.go,.cal,.wk,.isl,.hero,#fx{-webkit-user-select:non
 .tk input{width:20px;height:20px;accent-color:var(--sea);flex:none}.tk.dn span{text-decoration:line-through;color:var(--sub)}.tk.cur span{font-weight:700}
 body.ns #v>.card.todo{min-height:130px}#fx .fxk{font-size:15px;max-width:80%;margin-top:-6px}
 .ring{width:min(240px,62vw);height:min(240px,62vw)}#tm{font-size:min(46px,12vw)}
+.zlist{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.zh{display:flex;justify-content:space-between;align-items:baseline;margin:10px 0 6px;font-size:14px}.zh:first-child{margin-top:0}.zh span{color:var(--sub);font-size:12px}
+.zg span.zq{filter:grayscale(1) brightness(0) opacity(.3)}
+#zdt{display:none;min-height:0;font-size:13px;margin:0 0 8px;padding:8px 10px}#zdt.on{display:block}
 </style></head><body><main>
 <div class="top"><h1>🏝️ 勉強アイランド</h1><div style="display:flex;align-items:center;gap:10px"><span class="clk"></span><div class="badge" id="st"></div></div></div>
 <div id="v"></div></main>
@@ -191,11 +195,13 @@ function home(){const run=!!S.run;
  }
 function islV(){const p=S.rem+el(),tot=(Object.values(S.days).reduce((a,r)=>a+r.sec,0)+el())/3600,v=lvOf(tot,LP),nx=LP[v+1];
  return{e:PE[v],t:"Lv."+(v+1)+" "+PT[v],s:nx?"次の進化「"+PT[v+1]+"」まで あと"+Math.max(0.1,Math.round((nx-tot)*10)/10)+"時間":"最終形態に到達!",pc:nx?(tot-LP[v])/(nx-LP[v])*100:100,nx:"次の仲間まで あと"+Math.max(1,Math.ceil((600-p%600)/60))+"分",pb:p%600/6}}
-function islTick(){if(S.items.length!==lastN)return draw();if(!$("#ihe"))return;const o=islV();$("#ihe").textContent=o.e;$("#ilt").textContent=o.t;$("#ils").textContent=o.s;$("#ilb").style.width=o.pc+"%";$("#inx").textContent=o.nx;$("#ipb").style.width=o.pb+"%"}
-function isl(){const n=S.items.length,o=islV();lastN=n;
+function islTick(){if(S.items.length!==lastN)return draw();if(!$("#ihe"))return;const o=islV();$("#ihe").textContent=o.e;$("#ilt").textContent=o.t;$("#ils").textContent=o.s;$("#ilb").style.width=o.pc+"%";if($("#inx")){$("#inx").textContent=o.nx;$("#ipb").style.width=o.pb+"%"}}
+function isl(){const n=S.items.length,o=islV(),owned=new Set(S.items);lastN=n;
+ const sg='<div class="seg" style="margin:0 0 8px"><button class="'+(isTab=="n"?"on":"")+'" data-it="n">仲間 '+n+'</button><button class="'+(isTab=="z"?"on":"")+'" data-it="z">図鑑 '+owned.size+'/'+ALLN+'</button></div>';
+ const body=isTab=="z"?zukan(owned):'<p class="sub" id="inx" style="margin:0 0 4px">'+o.nx+'</p><div class="bar" style="margin:0 0 8px"><i id="ipb" style="width:'+o.pb+'%"></i></div>'
+  +(n?'<div class="dt'+(selItem>=0?" on":"")+'" id="idt">'+itemInfo(selItem)+'</div><div class="isl">'+S.items.map((x,i)=>[x,i]).reverse().map(a=>'<span data-ii="'+a[1]+'" class="'+cls(a[0])+(a[1]==selItem?" sel":"")+'">'+esc(a[0])+'</span>').join("")+'</div>':'<p class="sub">まだ空っぽ。10分勉強するごとに、島に何かが生まれます。</p>');
  return '<div class="card"><div class="hero" id="ihe">'+o.e+'</div><h2 id="ilt" style="text-align:center;margin:4px 0">'+o.t+'</h2><p class="sub" id="ils" style="text-align:center;margin:0 0 6px">'+o.s+'</p><div class="bar"><i id="ilb" style="width:'+o.pc+'%"></i></div></div>'
- +'<div class="card fl"><h2 style="margin:0 0 6px">仲間たち <span class="sub">'+n+'個 ・ 図鑑 '+new Set(S.items).size+'/'+ALLN+'種</span></h2><p class="sub" id="inx" style="margin:0 0 4px">'+o.nx+'</p><div class="bar" style="margin:0 0 8px"><i id="ipb" style="width:'+o.pb+'%"></i></div>'
- +(n?'<div class="dt'+(selItem>=0?" on":"")+'" id="idt">'+itemInfo(selItem)+'</div><div class="isl">'+S.items.map((x,i)=>[x,i]).reverse().map(a=>'<span data-ii="'+a[1]+'" class="'+cls(a[0])+(a[1]==selItem?" sel":"")+'">'+esc(a[0])+'</span>').join("")+'</div>':'<p class="sub">まだ空っぽ。10分勉強するごとに、島に何かが生まれます。</p>')+'</div>'}
+ +'<div class="card fl">'+sg+body+'</div>'}
 function rec(){const dn=["日","月","火","水","木","金","土"],cols=[];let d=new Date();d.setDate(d.getDate()-6);
  for(let i=0;i<7;i++){const k=key(d),r=S.days[k],g=r?r.goal*60:S.goal*60,h=r?Math.min(100,r.sec/g*100):0;cols.push('<div data-k="'+k+'" tabindex="0"><b class="'+(ok(k)?"ok":"")+'" style="height:'+Math.max(4,h)+'px"></b>'+dn[d.getDay()]+'<br>'+(r?Math.floor(r.sec/60):0)+'分</div>');d.setDate(d.getDate()+1)}
  const a=weekSum(0),b=weekSum(7),df=Math.round((a-b)/60);
@@ -262,6 +268,7 @@ $("#v").onclick=e=>{const bt=e.target.closest&&e.target.closest("button")||e.tar
  if(d.ps)pauseToggle();
  if(d.md){S.mode=d.md;save();cloudSave();draw()}
  if(d.pg)pomoForm();
+ if(d.it){isTab=d.it;selZ=null;draw()}
  if(d.sd!==undefined)delSubj(+d.sd);
  if(d.td)todoForm(d.td);
  if(d.tm){tcm=Math.max(-2,Math.min(12,tcm+ +d.tm));draw()}
@@ -383,6 +390,23 @@ function fitHome(){if(tab!="h")return;const v=$("#v"),r=v.querySelector(".ring")
  r.style.width=r.style.height="240px";let o=0;[...v.children].forEach(c=>{if(c!==td)o+=c.offsetHeight+10});
  const def=130-(v.clientHeight-o-10),sz=Math.max(88,Math.min(240,240-Math.max(0,def)));
  r.style.width=r.style.height=sz+"px";const t=$("#tm");if(t)t.style.fontSize=Math.max(18,Math.min(46,sz*.2))+"px"}
+let isTab="n",selZ=null;
+const TIERS=[["★ ふつう",CO,.7795],["★★ レア",RL,.15],["★★★ スーパーレア",SR,.05],["★★★★ レジェンド",LEG,.017],["★★★★★ 神話",MY,.003],["★★★★★★ 創世",GN,.0005]];
+const Z2={"🌱":"島の土からそっと顔を出した小さな芽。ここから、島の景色が少しずつ育っていく。","🌲":"まっすぐ空にのびる島の針葉樹。冬でも葉の色を変えず、島をずっと見守っている。","🌳":"枝を大きく広げた木。夏には深い木陰をつくり、島の動物たちのお昼寝場所になる。","🌼":"風にゆれる小さな花。勉強に疲れたとき、ふと目にとまって気持ちをなごませてくれる。","🍄":"雨あがりの木の根もとに、ひょっこり顔を出す。夜になると、ほんのり光ることがあるらしい。","🌸":"春をつれてくる島の名物。花びらが舞う季節には、島じゅうがうす桃色にそまる。","🏠":"島にできた最初のおうち。煙突からは、いつも温かいスープのにおいがする。","⛺":"星空の下で一晩をすごす、旅人のテント。朝になると、いつのまにかいなくなっている。","🌻":"太陽の向きに合わせて首をまわす花。まっすぐ上を向く姿は、勉強のお手本のよう。","🌴":"南の海の風にゆれる、島のシンボル。実を落とす音で、昼寝から目が覚めることもある。","🌷":"色とりどりに並んで咲く花壇の主役。同じ色は二つとなく、数えるのが楽しい。","🍃":"風にのって、どこからともなく舞ってくる葉。島のあちこちに、季節のたよりを届ける。",
+"🦊":"島の森をこっそり探検している、すばしこい住人。近づくと、さっと茂みに隠れてしまう。","🦆":"池をすいすい泳ぐ島の人気者。ヒナを連れて一列に歩く姿は、見ていて飽きない。","🐚":"耳にあてると、遠い海の音が聞こえる。波打ちぎわで拾った、小さな宝物。","⛩️":"島を守る赤い門。くぐると、不思議と気持ちが引きしまると言われている。","🌈":"雨あがりの空にかかる、大きな橋。勉強をがんばった日にだけ、姿を見せる気がする。","🦋":"花から花へひらひらと舞う、気まぐれな住人。止まった花は、その日いちばんよく咲く。","🐢":"ゆっくり歩いて、いつのまにか島を一周している。「続ければ着く」と教えてくれる。","🎡":"島をぐるりと一望できる、小さな観覧車。てっぺんからは、自分の足あとが見える。","🐠":"島のまわりの浅瀬を、きらきらと泳ぐ魚たち。日がさすと、うろこが宝石のように光る。","🦜":"島の歌をひとつ残らず覚えている、おしゃべりな鳥。たまに「がんばれ」と声をかけてくる。",
+"🗼":"島でいちばん高い場所にある塔。のぼると、ここまで来た道のりが一望できる。","🦩":"片足で立ったまま、じっと水面を見つめる島の名物。ピンクの羽が夕日によく映える。","🎠":"夜になると明かりがともり、ゆっくり回りだす。乗るとなぜか、肩の力がぬけていく。","🪁":"風をつかんで空高くのぼっていく。糸を引く手ごたえは、勉強の積み重ねによく似ている。","🛶":"波のうえを音もなくすべる小さな舟。静かな朝にこぐと、島の裏側にたどり着ける。",
+"🦄":"満月の夜にだけ現れると言われる、伝説の馬。出会えた人の願いを、ひとつだけ聞いてくれる。","🐉":"島の山に棲む、守り神のドラゴン。努力を重ねる人のそばで、静かに見守っている。","🏯":"積み重ねた時間の上に建つ、島のシンボル。石垣の一つひとつが、あなたの勉強の跡。","🌋":"島の底に眠る、大きな力のかたまり。目を覚ますそのときまで、静かに力をためている。",
+"🌠":"夜空を横切る、一瞬のかがやき。願いごとを三回唱えられた人は、ほとんどいない。","🪐":"島の空にだけ見える、輪のある星。長い時間、勉強を続けた人だけが気づけるという。","👑":"努力を重ねた者だけが手にする宝。かぶる人を選ぶので、持ち主はめったに現れない。",
+"🌟":"島が生まれたときに放たれた、最初の光。出会えた人は、島の歴史の一部になる。","💎":"積み重ねた時間が、ひとつの形になったもの。かけた時間だけ、深く透きとおっていく。"};
+function zukan(owned){return'<div class="dt'+(selZ?" on":"")+'" id="zdt">'+(selZ?zInfo(selZ):"")+'</div><div class="zlist">'+TIERS.map(t=>{const h=t[1].filter(x=>owned.has(x)).length;
+  return'<div class="zh"><b>'+t[0]+'</b><span>'+h+'/'+t[1].length+' ・ 抽選で約'+parseFloat((t[2]*100).toPrecision(4))+'%</span></div><div class="isl zg">'+t[1].map(x=>'<span data-zi="'+x+'" class="'+(owned.has(x)?cls(x):"zq")+(selZ==x?" sel":"")+'">'+x+'</span>').join("")+'</div>'}).join("")+'</div>'}
+function zInfo(x){const t=TIERS.find(t=>t[1].includes(x)),own=S.items.includes(x),rate="1回の抽選で出る確率 約"+parseFloat((t[2]/t[1].length*100).toPrecision(2))+"%",b='<button class="lnk" data-zc="1" style="float:right;padding:0 4px">✕</button>';
+ if(!own)return b+"<b>？？？</b> "+t[0]+"<br>まだ出会っていない仲間です。<br>"+rate;
+ const q=INF[x]||[x,""];return b+"<b>"+esc(x)+" "+esc(q[0])+"</b> "+t[0]+"<br>"+esc(Z2[x]||q[1])+"<br>"+rate+" ・ 持っている数 ×"+S.items.filter(y=>y==x).length+" ・ "+(S.items.indexOf(x)+1)+"番目に出会った"}
+const showZ=e=>{const b=$("#zdt");if(!b||!e.target.closest)return;const off=()=>{selZ=null;b.className="dt";b.innerHTML="";document.querySelectorAll(".zg span.sel").forEach(y=>y.classList.remove("sel"))};
+ if(e.target.closest("[data-zc]"))return off();const c=e.target.closest("[data-zi]");if(!c)return;const x=c.dataset.zi;if(selZ===x)return off();
+ selZ=x;b.className="dt on";b.innerHTML=zInfo(x);document.querySelectorAll(".zg span").forEach(y=>y.classList.toggle("sel",y===c))};
+$("#v").addEventListener("click",showZ);
 function todoCard(){const a=tdOf(key()),n=a.length,dn=a.filter(x=>x.d).length,rows=a.map((x,i)=>[x,i]).sort((p,q)=>(p[0].d?1:0)-(q[0].d?1:0)||p[1]-q[1]);let first=true;
  return'<div class="card fl todo"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><h2 style="margin:0;font-size:16px">📝 今日やること'+(n?' <span class="sub">'+dn+'/'+n+'</span>':'')+'</h2><button class="chip" data-td="'+key()+'">'+(n?"編集":"＋ 追加")+'</button></div>'
  +(n?'<div class="tlist">'+rows.map(r=>{const x=r[0],cur=!x.d&&first;if(cur)first=false;return'<label class="tk'+(x.d?" dn":"")+(cur?" cur":"")+'"><input type="checkbox" data-ti="'+r[1]+'"'+(x.d?" checked":"")+'><span>'+esc(x.t)+'</span></label>'}).join("")+'</div>':'<p class="sub" style="margin:6px 0 0">やることを決めると、ここに表示されます。</p>')+'</div>'}
