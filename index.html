@@ -131,6 +131,7 @@ body.ns #v>.card.todo{min-height:130px}#fx .fxk{font-size:15px;max-width:80%;mar
 .zg span.zq{filter:grayscale(1) brightness(0) opacity(.3)}
 #zdt{display:none;min-height:0;font-size:13px;margin:0 0 8px;padding:8px 10px}#zdt.on{display:block}
 .zlist .zg{overflow:visible;overscroll-behavior:auto;flex:none;min-height:auto}
+.sw{width:34px;height:34px;border-radius:50%;border:3px solid transparent;padding:0;flex:none}.sw.on{border-color:var(--ink);box-shadow:inset 0 0 0 2px var(--card)}
 </style></head><body><main>
 <div class="top"><h1>🏝️ 勉強アイランド</h1><div style="display:flex;align-items:center;gap:10px"><span class="clk"></span><div class="badge" id="st"></div></div></div>
 <div id="v"></div></main>
@@ -211,7 +212,7 @@ function rec(){const dn=["日","月","火","水","木","金","土"],cols=[];let 
  +cal()}
 function set(){const q=P(),row=(d,l,v,x)=>'<button class="srow" data-'+d+'="1"'+(x||"")+'>'+l+(v!==undefined?'<span>'+v+' ›</span>':'')+'</button>';
  return '<div class="card"><h2 style="margin-top:0">1日の目標</h2><div class="chips" style="justify-content:flex-start;margin:6px 0 0">'+[15,30,60,90,120].map(g=>'<button class="chip'+(g==S.goal?" on":"")+'" data-g="'+g+'">'+g+'分</button>').join("")+'<button class="chip'+(GL.includes(S.goal)?"":" on")+'" data-gc="1">'+(GL.includes(S.goal)?"自由入力":S.goal+"分")+'</button></div></div>'
- +'<div class="card"><h2 style="margin-top:0">タイマー</h2>'+row("pg","ポモドーロの設定",q.w+"分 / 休憩"+q.sb+"分")+row("wl","画面を消さない(勉強中)",S.wl===false?"オフ":"オン")+row("fs","集中画面(勉強中)",S.fxoff?"オフ":"オン")+'</div>'
+ +colCard()+'<div class="card"><h2 style="margin-top:0">タイマー</h2>'+row("pg","ポモドーロの設定",q.w+"分 / 休憩"+q.sb+"分")+row("wl","画面を消さない(勉強中)",S.wl===false?"オフ":"オン")+row("fs","集中画面(勉強中)",S.fxoff?"オフ":"オン")+'</div>'
  +'<div class="card"><h2 style="margin-top:0">科目</h2>'+S.subj.map((n,i)=>'<div class="srow"><span style="color:var(--ink);font-size:15px;text-align:left">'+esc(n)+'</span><button class="lnk" data-sd="'+i+'">✕ 消す</button></div>').join("")+'<button class="srow" style="border-top:1px solid var(--ln)" data-add="1">＋ 科目を追加</button></div>'
  +'<div class="card"><h2 style="margin-top:0">お知らせ・予定</h2>'+row("nt","デスクトップ通知",S.nt&&S.nt.on?"オン":"オフ")+row("ex","試験日",S.exam&&S.exam.date?esc(S.exam.name||"試験")+" "+S.exam.date:"未設定")+'</div>'
  +tcal()+acc()+'<div class="card">'+row("reset","データを消す",undefined,' style="color:#d9534f"')+'</div>'}
@@ -270,6 +271,7 @@ $("#v").onclick=e=>{const bt=e.target.closest&&e.target.closest("button")||e.tar
  if(d.ps)pauseToggle();
  if(d.md){S.mode=d.md;save();cloudSave();draw()}
  if(d.pg)pomoForm();
+ if(d.cc&&(d.cc=="auto"||/^#[0-9a-f]{6}$/i.test(d.cc))){S.myc=d.cc=="auto"?"":d.cc;save();cloudSave();sync();draw()}
  if(d.it){isTab=d.it;selZ=null;draw()}
  if(d.sd!==undefined)delSubj(+d.sd);
  if(d.td)todoForm(d.td);
@@ -310,7 +312,7 @@ function listen(){if(unsub)unsub();unsub=null;if(!db||!S.gid)return;
   if(tab=="m")draw()},e=>{fbErr=e.message;if(tab=="m")draw()})}
 function sync(x){if(!db||!S.gid||!uid)return;
  const t=today(),tot=Object.values(S.days).reduce((a,r)=>a+r.sec,0);
- return db.doc("groups/"+S.gid+"/members/"+uid).set(Object.assign({nick:S.nick,goal:S.goal,todayKey:key(),todaySec:Math.min(86400,Math.round(t.sec)),totalSec:Math.round(tot),studying:!!(S.run&&!S.run.paused&&S.run.ph!=="b"),runStart:S.run&&!S.run.paused&&S.run.ph!=="b"?S.run.t0:null,hb:Date.now(),hide:!!S.hide,left:false,onl:document.visibilityState=="visible",pAt:Date.now()},x||{}),{merge:true}).catch(e=>{fbErr=e.message})}
+ return db.doc("groups/"+S.gid+"/members/"+uid).set(Object.assign({nick:S.nick,goal:S.goal,todayKey:key(),todaySec:Math.min(86400,Math.round(t.sec)),totalSec:Math.round(tot),studying:!!(S.run&&!S.run.paused&&S.run.ph!=="b"),runStart:S.run&&!S.run.paused&&S.run.ph!=="b"?S.run.t0:null,hb:Date.now(),hide:!!S.hide,left:false,col:S.myc||null,onl:document.visibilityState=="visible",pAt:Date.now()},x||{}),{merge:true}).catch(e=>{fbErr=e.message})}
 function leave(){if(unsub)unsub();unsub=null;if(db&&S.gid&&uid)db.doc("groups/"+S.gid+"/members/"+uid).set({left:true,studying:false,runStart:null},{merge:true}).catch(()=>{});S.gid=null;mem={};pReset();postsOff();save();cloudSave();draw()}
 function cheer(id,b){if(!db||!S.gid)return;const k=key();S.chd=S.chd||{};if(S.chd[id]==k)return;
  S.chd[id]=k;save();b.disabled=true;b.textContent="👏送った!";if(navigator.vibrate)navigator.vibrate(30);toast("応援を送りました👏");
@@ -327,7 +329,7 @@ function soctick(){const h=soc();if(h!==lastSoc){lastSoc=h;$("#v").innerHTML=h}}
 function soc(){
  if(!OKB)return '<div class="card"><h2 style="margin-top:0">みんなで使う</h2><p class="sub">config.js にFirebaseの設定を書くと、友達とつながれます。</p></div>';
  if(!S.gid)return '<div class="card"><h2 style="margin-top:0">友達とつながる</h2><p class="sub">勉強中かどうか、今日の勉強時間、順位が共有されます。</p><button class="go" data-mk="1">グループを作る</button><p></p><button class="go stop" data-jn="1">コードで参加する</button>'+err()+'</div>';
- const all=Object.keys(mem).sort((a,b)=>(mem[a].joined||0)-(mem[b].joined||0)||(a<b?-1:1)),col={};all.forEach((i,n)=>col[i]="hsl("+Math.round(n*137.5%360)+" 62% 52%)");
+ const all=Object.keys(mem).sort((a,b)=>(mem[a].joined||0)-(mem[b].joined||0)||(a<b?-1:1)),col=memCols();
  const vis=all.filter(i=>!mem[i].left),shown=vis.filter(i=>!mem[i].hide),secret=vis.filter(i=>mem[i].hide);
  const sec=i=>(mem[i].totalSec||0)+la(mem[i]),T=all.reduce((a,i)=>a+sec(i),0),h=T/3600,L=LG,E=EM;
  let lv=0;L.forEach((x,i)=>{if(h>=x)lv=i});const nx=L[lv+1],pc=nx?(h-L[lv])/(nx-L[lv])*100:100;
@@ -409,6 +411,9 @@ const showZ=e=>{const b=$("#zdt");if(!b||!e.target.closest)return;const off=()=>
  if(e.target.closest("[data-zc]"))return off();const c=e.target.closest("[data-zi]");if(!c)return;const x=c.dataset.zi;if(selZ===x)return off();
  selZ=x;b.className="dt on";b.innerHTML=zInfo(x);document.querySelectorAll(".zg span").forEach(y=>y.classList.toggle("sel",y===c))};
 $("#v").addEventListener("click",showZ);
+const PAL=["#e5484d","#f76808","#f5a623","#46a758","#12a594","#0091ff","#3e63dd","#8e4ec6","#d6409f","#6e6e6e","#8b5e3c","#00a2c7"];
+function memCols(){const all=Object.keys(mem).sort((a,b)=>(mem[a].joined||0)-(mem[b].joined||0)||(a<b?-1:1)),c={};all.forEach((i,n)=>{const x=mem[i].col;c[i]=/^#[0-9a-fA-F]{6}$/.test(x||"")?x:"hsl("+Math.round(n*137.5%360)+" 62% 52%)"});return c}
+function colCard(){const cur=S.myc||"";return'<div class="card"><h2 style="margin-top:0">アイコンの色</h2><p class="sub" style="margin:0 0 8px">「みんな」のメーターや、掲示板の名前の横に出る、自分の色です。</p><div class="chips" style="justify-content:flex-start;gap:10px;margin:0">'+PAL.map(c=>'<button class="sw'+(c==cur?" on":"")+'" data-cc="'+c+'" style="background:'+c+'" aria-label="'+c+'"></button>').join("")+'<button class="chip'+(cur?"":" on")+'" data-cc="auto">自動</button></div></div>'}
 function todoCard(){const a=tdOf(key()),n=a.length,dn=a.filter(x=>x.d).length,rows=a.map((x,i)=>[x,i]).sort((p,q)=>(p[0].d?1:0)-(q[0].d?1:0)||p[1]-q[1]);let first=true;
  return'<div class="card fl todo"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><h2 style="margin:0;font-size:16px">📝 今日やること'+(n?' <span class="sub">'+dn+'/'+n+'</span>':'')+'</h2><button class="chip" data-td="'+key()+'">'+(n?"編集":"＋ 追加")+'</button></div>'
  +(n?'<div class="tlist">'+rows.map(r=>{const x=r[0],cur=!x.d&&first;if(cur)first=false;return'<label class="tk'+(x.d?" dn":"")+(cur?" cur":"")+'"><input type="checkbox" data-ti="'+r[1]+'"'+(x.d?" checked":"")+'><span>'+esc(x.t)+'</span></label>'}).join("")+'</div>':'<p class="sub" style="margin:6px 0 0">やることを決めると、ここに表示されます。</p>')+'</div>'}
@@ -456,7 +461,7 @@ function tmf(t){const d=new Date(t);return(key(d)==key()?"":(d.getMonth()+1)+"/"
 function reportText(){const r=S.days[key()],f=x=>x>=60?Math.floor(x/60)+"時間"+(x%60?x%60+"分":""):x+"分";if(!r||r.sec<60)return"今日はこれから勉強します!💪";
  return"今日は"+f(Math.floor(r.sec/60))+"勉強したよ📚("+Object.entries(r.by||{}).sort((a,b)=>b[1]-a[1]).map(x=>x[0]+" "+f(Math.floor(x[1]/60))).join("・")+")"+(ok(key())?" 目標達成!🎉":"")}
 function postList(){if(!posts.length)return'<p class="sub">まだ投稿がありません。最初の報告をしてみよう!</p>';
- return posts.map(p=>'<div class="mm" id="p-'+esc(p.id)+'" style="align-items:flex-start"><div style="flex:1;min-width:0"><b>'+esc(p.nick||"?")+'</b> <span class="sub">'+tmf(p.at)+(p.re&&p.re.uid==uid?" ・あなたへの返信":"")+'</span>'
+ const C=memCols();return posts.map(p=>'<div class="mm" id="p-'+esc(p.id)+'" style="align-items:flex-start"><div style="flex:1;min-width:0">'+(C[p.uid]?'<u class="dot" style="background:'+C[p.uid]+';margin-right:5px"></u>':'')+'<b>'+esc(p.nick||"?")+'</b> <span class="sub">'+tmf(p.at)+(p.re&&p.re.uid==uid?" ・あなたへの返信":"")+'</span>'
   +(p.re?'<div class="qt" data-qj="'+esc(p.re.id)+'">↩ '+esc(p.re.nick||"?")+': '+esc(p.re.text||"")+'</div>':'')
   +'<div style="white-space:pre-wrap;word-break:break-word">'+esc(p.text)+'</div>'+thImg(p)+'</div><button class="lnk" data-rp="'+esc(p.id)+'">↩</button>'+(p.uid==uid?'<button class="lnk" data-dp="'+esc(p.id)+'">✕</button>':'')+'</div>').join("")+(pmore?'<button class="chip" data-mp="1" style="display:block;margin:10px auto 0">さらに古い投稿を読み込む</button>':'')}
 function brd(){if(!OKB||!S.gid)return'<div class="card"><h2 style="margin-top:0">掲示板</h2><p class="sub">「みんな」タブでグループに参加すると使えます。</p></div>';
