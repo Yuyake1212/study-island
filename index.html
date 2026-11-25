@@ -194,14 +194,15 @@ function home(){const run=!!S.run;
  +'<div class="chips">'+S.subj.map((s,i)=>'<button class="chip'+(i==S.cur?" on":"")+'" data-s="'+i+'"'+(run?" disabled":"")+'>'+esc(s)+'</button>').join("")+(run?"":'<button class="chip" data-add="1">＋</button>')+'</div>'
  +(run?'<button class="go" data-ps="1">'+(S.run.paused?"▶ 再開":"⏸ 一時停止")+'</button><div style="height:10px"></div>':'')+'<button class="go'+(run?" stop":"")+'" id="go">'+(run?"おわる":"はじめる")+'</button>'+(run?'<button class="lnk" data-fx="1">集中画面にする</button>':'')+'</div>'+todoCard()
  }
+const fmtT=s=>{const m=Math.floor(s/60),h=Math.floor(m/60);return h?h+"時間"+(m%60?m%60+"分":""):m+"分"};
 function islV(){const p=S.rem+el(),tot=(Object.values(S.days).reduce((a,r)=>a+r.sec,0)+el())/3600,v=lvOf(tot,LP),nx=LP[v+1];
- return{e:PE[v],t:"Lv."+(v+1)+" "+PT[v],s:nx?"次の進化「"+PT[v+1]+"」まで あと"+Math.max(0.1,Math.round((nx-tot)*10)/10)+"時間":"最終形態に到達!",pc:nx?(tot-LP[v])/(nx-LP[v])*100:100,nx:"次の仲間まで あと"+Math.max(1,Math.ceil((600-p%600)/60))+"分",pb:p%600/6}}
-function islTick(){if(S.items.length!==lastN)return draw();if(!$("#ihe"))return;const o=islV();$("#ihe").textContent=o.e;$("#ilt").textContent=o.t;$("#ils").textContent=o.s;$("#ilb").style.width=o.pc+"%";if($("#inx")){$("#inx").textContent=o.nx;$("#ipb").style.width=o.pb+"%"}}
+ return{tt:fmtT(tot*3600),e:PE[v],t:"Lv."+(v+1)+" "+PT[v],s:nx?"次の進化「"+PT[v+1]+"」まで あと"+Math.max(0.1,Math.round((nx-tot)*10)/10)+"時間":"最終形態に到達!",pc:nx?(tot-LP[v])/(nx-LP[v])*100:100,nx:"次の仲間まで あと"+Math.max(1,Math.ceil((600-p%600)/60))+"分",pb:p%600/6}}
+function islTick(){if(S.items.length!==lastN)return draw();if(!$("#ihe"))return;const o=islV();$("#ihe").textContent=o.e;$("#ilt").textContent=o.t;$("#ils").textContent=o.s;$("#ilb").style.width=o.pc+"%";if($("#ittv"))$("#ittv").textContent=o.tt;if($("#inx")){$("#inx").textContent=o.nx;$("#ipb").style.width=o.pb+"%"}}
 function isl(){const n=S.items.length,o=islV(),owned=new Set(S.items);lastN=n;
  const sg='<div class="seg" style="margin:0 0 8px"><button class="'+(isTab=="n"?"on":"")+'" data-it="n">仲間 '+n+'</button><button class="'+(isTab=="z"?"on":"")+'" data-it="z">図鑑 '+owned.size+'/'+ALLN+'</button></div>';
  const body=isTab=="z"?zukan(owned):'<p class="sub" id="inx" style="margin:0 0 4px">'+o.nx+'</p><div class="bar" style="margin:0 0 8px"><i id="ipb" style="width:'+o.pb+'%"></i></div>'
   +(n?'<div class="dt'+(selItem>=0?" on":"")+'" id="idt">'+itemInfo(selItem)+'</div><div class="isl">'+S.items.map((x,i)=>[x,i]).reverse().map(a=>'<span data-ii="'+a[1]+'" class="'+cls(a[0])+(a[1]==selItem?" sel":"")+'">'+esc(a[0])+'</span>').join("")+'</div>':'<p class="sub">まだ空っぽ。10分勉強するごとに、島に何かが生まれます。</p>');
- return '<div class="card"><div class="hero" id="ihe">'+o.e+'</div><h2 id="ilt" style="text-align:center;margin:4px 0">'+o.t+'</h2><p class="sub" id="ils" style="text-align:center;margin:0 0 6px">'+o.s+'</p><div class="bar"><i id="ilb" style="width:'+o.pc+'%"></i></div></div>'
+ return '<div class="card"><div class="hero" id="ihe">'+o.e+'</div><h2 id="ilt" style="text-align:center;margin:4px 0">'+o.t+'</h2><p class="sub" style="text-align:center;margin:0 0 2px">これまでの総勉強時間 <b id="ittv">'+o.tt+'</b></p><p class="sub" id="ils" style="text-align:center;margin:0 0 6px">'+o.s+'</p><div class="bar"><i id="ilb" style="width:'+o.pc+'%"></i></div></div>'
  +'<div class="card fl">'+sg+body+'</div>'}
 function rec(){const dn=["日","月","火","水","木","金","土"],cols=[];let d=new Date();d.setDate(d.getDate()-6);
  for(let i=0;i<7;i++){const k=key(d),r=S.days[k],g=r?r.goal*60:S.goal*60,h=r?Math.min(100,r.sec/g*100):0;cols.push('<div data-k="'+k+'" tabindex="0"><b class="'+(ok(k)?"ok":"")+'" style="height:'+Math.max(4,h)+'px"></b>'+dn[d.getDay()]+'<br>'+(r?Math.floor(r.sec/60):0)+'分</div>');d.setDate(d.getDate()+1)}
